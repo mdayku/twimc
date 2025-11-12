@@ -36,6 +36,7 @@ cp ../.env .env  # or create from .env.example
 #   BEDROCK_REGION=us-east-1
 #   BEDROCK_MODEL_ID=anthropic.claude-3-5-sonnet-20241022-v2:0
 #   (optional) BEDROCK_GUARDRAILS_ID=grd-xxxxxxxx
+#   API_TOKEN=dev-token-123              # or API_TOKENS=token1,token2
 
 # 3. Run the server
 npm run dev
@@ -52,13 +53,22 @@ curl http://localhost:8787/health
 # Generate a demand letter
 curl -X POST http://localhost:8787/v1/generate \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer dev-token-123" \
   -d @../data/facts_seed.json
 
 # Export to DOCX
 curl -X POST http://localhost:8787/v1/export/docx \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer dev-token-123" \
   -d '{"draft_md":"# Test Letter\n\nThis is a test."}' \
   --output test.docx
+
+# Intake with multipart (attachments)
+curl -X POST http://localhost:8787/v1/intake \
+  -H "Authorization: Bearer dev-token-123" \
+  -F 'facts_json={"parties":{"plaintiff":"Consumer","defendant":"ACME"},"incident":"...","damages":{"amount_claimed":1000}}' \
+  -F "attachments=@path/to/evidence.pdf" \
+  -F "attachments=@path/to/photo.jpg"
 ```
 
 ## API Endpoints

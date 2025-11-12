@@ -38,8 +38,8 @@ Steno is an AI-powered legal document generator that helps attorneys and paraleg
 Local development: `http://localhost:8787`
 
 ### Authentication
-**MVP**: No authentication required (localhost only)  
-**Future**: Bearer token in `Authorization` header
+**Current**: Bearer token required for all `/v1/*` endpoints (localhost or deployed)  
+Pass `Authorization: Bearer <token>`; configure one or more tokens via env: `API_TOKEN` or `API_TOKENS=token1,token2`
 
 ### Endpoints
 
@@ -60,6 +60,12 @@ GET /health
 POST /v1/intake
 ```
 **Purpose**: Store case facts and return a unique identifier
+
+**Headers**:
+```http
+Authorization: Bearer <token>
+X-Request-Id: <optional-correlation-id>
+```
 
 **Request Body**:
 ```json
@@ -92,6 +98,17 @@ POST /v1/intake
 }
 ```
 
+Or as multipart form (file uploads):
+
+```http
+Content-Type: multipart/form-data
+Authorization: Bearer <token>
+
+fields:
+- facts_json: stringified JSON (same shape as above)
+- attachments: one or more files (each up to 10MB; max 5 files)
+```
+
 **Required Fields**:
 - `facts_json.parties.plaintiff` (string)
 - `facts_json.parties.defendant` (string)
@@ -110,6 +127,12 @@ POST /v1/intake
 POST /v1/generate
 ```
 **Purpose**: Generate a demand letter draft using AWS Bedrock (Claude)
+
+**Headers**:
+```http
+Authorization: Bearer <token>
+X-Request-Id: <optional-correlation-id>
+```
 
 **Request Body** (Option 1 - Use stored facts):
 ```json
@@ -158,6 +181,12 @@ POST /v1/generate
 POST /v1/export/docx
 ```
 **Purpose**: Convert markdown draft to Word document (.docx)
+
+**Headers**:
+```http
+Authorization: Bearer <token>
+X-Request-Id: <optional-correlation-id>
+```
 
 **Request Body**:
 ```json
@@ -267,8 +296,8 @@ open('data/facts_seed.json','w',encoding='utf-8').write(json.dumps(rows, indent=
 - [x] Returns unique `facts_id`
 - [x] Persists facts in memory storage
 - [x] Validates required fields: parties, incident, damages
-- [ ] Accepts optional attachments array
-- [ ] Logs intake with timestamp
+- [x] Accepts optional attachments array (multipart or JSON metadata)
+- [x] Logs intake with timestamp
 
 **Acceptance Test**: Submit valid facts JSON, receive facts_id, retrieve via generate endpoint
 
@@ -340,15 +369,15 @@ open('data/facts_seed.json','w',encoding='utf-8').write(json.dumps(rows, indent=
 ### Security & Privacy
 - [x] All secrets stored in `.env`, never logged
 - [x] AWS credentials via standard credential chain
-- [ ] Bedrock Guardrails enabled (blocks personal health info)
+- [x] Bedrock Guardrails (prompt-level; native guardrails to follow)
 - [ ] PII redaction in logs (configurable toggle)
-- [ ] API token authentication (basic auth for MVP)
+- [x] API token authentication (Bearer) for `/v1/*`
 
 ### Reliability
 - [x] Graceful error handling with descriptive messages
 - [x] Structured logging (Fastify logger)
-- [ ] Request/response logging with correlation IDs
-- [ ] Automatic retry on transient Bedrock errors
+- [x] Request/response logging with correlation IDs
+- [x] Automatic retry on transient Bedrock errors
 
 ### Maintainability
 - [x] TypeScript with strict mode
@@ -357,8 +386,8 @@ open('data/facts_seed.json','w',encoding='utf-8').write(json.dumps(rows, indent=
 - [x] Justfile with standard commands (typecheck, test, lint, ship)
 
 ### Observability
-- [ ] Request duration metrics
-- [ ] Bedrock token usage tracking
+- [x] Request duration metrics
+- [x] Bedrock token usage tracking
 - [ ] Error rate monitoring
 - [ ] Cost tracking per generate request
 

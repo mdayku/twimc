@@ -11,6 +11,10 @@
 - ✅ `/v1/intake` - Store facts with validation
 - ✅ `/v1/generate` - Generate demand letters via Bedrock (with fallback)
 - ✅ `/v1/export/docx` - Export markdown to Word documents
+- ✅ Bearer token auth for `/v1/*` endpoints
+- ✅ Correlation ID logging (`x-request-id`) + request duration
+- ✅ Multipart attachments support for intake + timestamps
+- ✅ In-process metrics for request duration and token usage (estimated)
 
 ### Modules
 - ✅ `server/bedrock.ts` - AWS Bedrock integration with Claude Sonnet
