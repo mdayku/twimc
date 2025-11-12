@@ -46,6 +46,7 @@ await app.register(cors, {
   origin: true, // Allow all origins for now (can restrict to Vercel domain later)
   credentials: true
 })
+console.log('✅ CORS enabled for all origins')
 
 // Register multipart for attachments (MVP limits)
 await app.register(multipart, {
