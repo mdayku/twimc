@@ -48,14 +48,14 @@ curl http://localhost:8787/health
 ```
 **Result**: ✅ 200 OK - Server running
 
-### Test 2: Generate Demand Letter
+### Test 2: Generate Demand Letter (OpenAI)
 ```bash
 POST /v1/generate with test facts
 ```
-**Result**: ✅ Draft generated successfully
-- Fallback template used (Bedrock requires AWS credentials)
+**Result**: ✅ Draft generated successfully (OpenAI default)
 - All required sections present (intro, facts, liability, damages, demand)
-- TODO placeholders working as expected
+- Explanations included for major sections
+- Critic pass issues included if unsupported claims found
 
 ### Test 3: Export to DOCX
 ```bash
@@ -66,34 +66,44 @@ POST /v1/export/docx with markdown draft
 - Letterhead support
 - Ready to open in Word
 
+### Test 4: Intake with Attachments (PDF/DOCX)
+```bash
+curl -X POST http://localhost:8787/v1/intake \
+  -H "Authorization: Bearer dev-token-123" \
+  -F 'facts_json={"parties":{"plaintiff":"Consumer","defendant":"ACME"},"incident":"","damages":{"amount_claimed":0}}' \
+  -F "attachments=@./data/example/police_report.pdf" \
+  -F "attachments=@./data/example/medical_report.docx"
+```
+**Result**: ✅ 200 OK with `facts_id`
+- Extracted text stored under `extracted_text`
+- Missing `incident` and `damages.amount_claimed` auto-merged when present in documents
+
 ## Next Steps to Production
 
-### Immediate (to test with real Bedrock)
-1. Configure AWS credentials:
+### Immediate
+1. Ensure `.env` uses OpenAI by default:
    ```bash
-   # Add to .env
-   AWS_ACCESS_KEY_ID=your_key
-   AWS_SECRET_ACCESS_KEY=your_secret
-   BEDROCK_REGION=us-east-1
+   LLM_PROVIDER=openai
+   OPENAI_API_KEY=sk-...
+   OPENAI_MODEL_ID=gpt-4
    ```
-2. Ensure Bedrock model access is enabled in AWS console
-3. Update model ID if needed (current: `anthropic.claude-3-5-sonnet-20241022-v2:0`)
+2. Optional: switch to Bedrock by setting `LLM_PROVIDER=bedrock` and configuring AWS creds
 
 ### P1 Features (Post-MVP)
 - [ ] Real-time collaborative editing
 - [ ] Version history and change tracking
-- [ ] Template management system
-- [ ] PDF/DOCX text extraction
+- [ ] Template management UI
+- [x] PDF/DOCX text extraction
 - [ ] Clause library with jurisdictional tags
-- [ ] Explainability (why each clause was included)
+- [x] Explainability (why each clause was included)
 
 ### Infrastructure (Production)
 - [ ] Replace in-memory storage with PostgreSQL/Redis
-- [ ] Add authentication (Bearer token)
+- [x] Authentication (Bearer token)
 - [ ] Rate limiting
-- [ ] Request logging with correlation IDs
-- [ ] Cost tracking (Bedrock token usage)
-- [ ] Deploy to AWS (ECS/Lambda/EC2)
+- [x] Request logging with correlation IDs
+- [ ] Cost tracking (per-request token usage)
+- [ ] Deploy to production (Vercel/AWS)
 
 ## Development Commands
 
@@ -135,6 +145,6 @@ python data/cfpb_importer.py --input data/complaints.csv --output data/facts_see
 - **Build Time**: TypeScript compilation < 2s
 - **API Latency**: 
   - Health check: < 100ms
-  - Generate (fallback): ~500ms
+  - Generate (OpenAI): p95 ≈ 3300ms (bench_results.json)
   - DOCX export: ~1s
 

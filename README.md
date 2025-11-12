@@ -5,9 +5,10 @@ AI-powered legal document generator that helps attorneys and paralegals create p
 ## Core Features
 
 - ✅ **Structured Legal Documents**: Consistent format with all mandatory sections (introduction, facts, liability, damages, demand)
-- ✅ **AI-Powered Generation**: AWS Bedrock Claude Sonnet with guardrails for factual accuracy
+- ✅ **AI-Powered Generation**: OpenAI (default) or AWS Bedrock via provider flag
 - ✅ **Professional Export**: DOCX format with proper legal document formatting
 - ✅ **Fast Iteration**: <5s p95 generation for typical 2-page demand letters
+- ✅ **Attachments + Extraction**: Upload PDF/DOCX; auto-extract and merge key facts
 
 ## Demo Flow
 
@@ -33,14 +34,14 @@ npm install
 
 # 2. Configure environment
 cp ../.env .env  # or create from .env.example
-# Edit .env and choose ONE provider:
+# Edit .env and choose ONE provider (OpenAI is recommended default):
 
 # ===========================================
 # OPTION 1: OpenAI (Recommended - simpler setup)
 # ===========================================
 LLM_PROVIDER=openai
 OPENAI_API_KEY=sk-your-openai-api-key-here
-OPENAI_MODEL_ID=gpt-4  # or gpt-3.5-turbo for cheaper
+OPENAI_MODEL_ID=gpt-4  # or gpt-4o / gpt-5 if enabled
 # OPENAI_BASE_URL=  # optional, for Azure/compat endpoints
 
 # ===========================================
@@ -86,7 +87,9 @@ curl -X POST http://localhost:8787/v1/intake \
   -H "Authorization: Bearer dev-token-123" \
   -F 'facts_json={"parties":{"plaintiff":"Consumer","defendant":"ACME"},"incident":"...","damages":{"amount_claimed":1000}}' \
   -F "attachments=@path/to/evidence.pdf" \
-  -F "attachments=@path/to/photo.jpg"
+  -F "attachments=@path/to/medical_report.docx"
+# The server will automatically extract text from supported files (PDF/DOCX)
+# and merge incident details / damage amounts into facts when fields are missing.
 ```
 
 ## API Endpoints
@@ -103,11 +106,14 @@ See [PRD.md](./PRD.md) for complete API specification.
 ```
 twimc/
 ├── server/               # Node.js API server
-│   ├── index.ts         # Main Fastify server
-│   ├── bedrock.ts       # AWS Bedrock integration
-│   ├── docx.ts          # DOCX export
-│   ├── extract.ts       # Text extraction (placeholder)
-│   └── schema/          # Type definitions
+│   ├── index.ts          # Main Fastify server
+│   ├── docx.ts           # DOCX export
+│   ├── extract.ts        # PDF/DOCX text extraction
+│   ├── llm/              # LLM provider abstraction
+│   │   ├── provider.ts   # LlmClient interface
+│   │   ├── openai.ts     # OpenAI implementation (default)
+│   │   └── bedrock.ts    # AWS Bedrock implementation
+│   └── schema/           # Type definitions
 ├── data/                # Data and templates
 │   ├── cfpb_importer.py # CFPB data converter
 │   ├── facts_seed.json  # Sample facts for testing
@@ -168,9 +174,9 @@ chmod +x .git/hooks/pre-commit
 ## Security & Compliance
 
 - Secrets stored in `.env` (never committed)
-- Bedrock Guardrails enabled (optional)
-- PII redaction in logs (configurable)
-- Basic token auth for API routes (TBD)
+- Provider guardrails (prompt-level; native guardrails optional)
+- PII redaction in logs (configurable toggle; pending)
+- Basic token auth for API routes (implemented)
 
 ## Roadmap
 
@@ -179,12 +185,14 @@ chmod +x .git/hooks/pre-commit
 - In-memory storage
 - Basic template support
 - DOCX export
+- File attachments with PDF/DOCX extraction and facts merge
+- OpenAI default with provider abstraction (OpenAI/Bedrock switchable)
 
 **Next**:
 - Real-time collaborative editing
 - Clause library with jurisdiction tags
-- Version history and change tracking
-- PDF text extraction
+- Version history UI + change tracking
+- Persistent storage (PostgreSQL/Redis)
 
 ## License
 

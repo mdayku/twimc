@@ -2,7 +2,7 @@
 
 ## System Overview
 
-Steno is a single-purpose API service that generates legal demand letters using AWS Bedrock (Claude) with a focus on factual accuracy and document formatting.
+Steno is a single-purpose API service that generates legal demand letters using an LLM provider abstraction: OpenAI (default) or AWS Bedrock (Claude), with a focus on factual accuracy and document formatting.
 
 ## High-Level Architecture
 
@@ -10,9 +10,10 @@ Steno is a single-purpose API service that generates legal demand letters using 
 flowchart LR
     Client[Client: curl/Postman/Future UI] --> API[Node.js API - Fastify]
     API --> Store[(In-Memory Store)]
-    API --> Bedrock[AWS Bedrock - Claude Sonnet]
+    API --> LLM{{LLM Provider Abstraction}}
+    LLM --> OpenAI[OpenAI - GPT]
+    LLM --> Bedrock[AWS Bedrock - Claude]
     API --> DOCX[DOCX Export Library]
-    Bedrock --> GR[Guardrails - Optional]
     API --> Logger[Structured Logging]
 ```
 
@@ -30,18 +31,18 @@ flowchart LR
 - Error handling and logging
 - Orchestrating calls to Bedrock and DOCX modules
 
-### Bedrock Integration (`server/bedrock.ts`)
-- **SDK**: `@aws-sdk/client-bedrock-runtime` (v3)
-- **Model**: Claude 3.5 Sonnet (configurable via `BEDROCK_MODEL_ID`)
-- **Region**: us-east-1 (configurable via `BEDROCK_REGION`)
-- **Credentials**: Standard AWS credential chain (profile, env vars, IAM role)
+### LLM Provider Abstraction (`server/llm/*`)
+- **Interface**: `LlmClient` with `generateDraft()` (+ optional `criticPass`)
+- **OpenAI**: `server/llm/openai.ts` – chat.completions, explanations + critic pass
+- **Bedrock**: `server/llm/bedrock.ts` – InvokeModel with retries, explanations + critic pass
+- **Selection**: `LLM_PROVIDER=openai|bedrock` in `.env` (OpenAI recommended by default)
 
 **Responsibilities**:
-- Construct system and user prompts
-- Call Bedrock InvokeModel API
-- Parse Claude's response
-- Detect TODO placeholders in generated drafts
-- Provide fallback template if Bedrock unavailable
+- Construct system + user prompts (facts-only; TODOs for missing info)
+- Call provider API and parse structured markdown
+- Extract explanations for major sections
+- Run critic pass to flag unsupported claims
+- Provide fallback template if provider unavailable
 
 **Prompt Strategy**:
 - **System**: Instructs Claude to be cautious, use only provided facts, insert TODO placeholders for missing info
@@ -70,9 +71,9 @@ flowchart LR
 - Future: Use Zod or JSON Schema for comprehensive validation
 
 ### Text Extraction (`server/extract.ts`)
-- Placeholder for future PDF/DOCX text extraction
-- Libraries to consider: `pdf-parse`, `mammoth`
-- Not implemented in MVP
+- PDF text extraction via `pdf-parse`
+- DOCX text extraction via `mammoth`
+- Errors are logged; empty string returned on failure
 
 ## Data Flow
 
@@ -82,14 +83,13 @@ flowchart LR
 1. Client sends POST /v1/generate with facts_json
    └─> index.ts validates request body
 
-2. index.ts calls generateWithBedrock(facts_json, template_md, firm_style)
-   └─> bedrock.ts constructs prompt
+2. index.ts calls `llmClient.generateDraft(facts_json, template_md, firm_style)`
+   └─> openai.ts / bedrock.ts constructs prompt
 
-3. bedrock.ts sends InvokeModelCommand to AWS Bedrock
-   └─> Claude Sonnet processes prompt
+3. Provider processes prompt (OpenAI/Bedrock)
    └─> Returns structured markdown draft
 
-4. bedrock.ts parses response, detects TODOs
+4. Provider parses response, detects TODOs + explanations
    └─> Returns { draft_md, issues }
 
 5. index.ts returns JSON response to client
@@ -131,7 +131,12 @@ flowchart LR
 All configuration via environment variables (`.env` file):
 
 ```ini
-# AWS Bedrock
+# LLM Provider
+LLM_PROVIDER=openai
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL_ID=gpt-4
+
+# (Optional) AWS Bedrock
 BEDROCK_REGION=us-east-1
 BEDROCK_MODEL_ID=anthropic.claude-3-5-sonnet-20241022-v2:0
 BEDROCK_GUARDRAILS_ID=  # Optional
@@ -203,9 +208,9 @@ LOG_LEVEL=info
 
 | Component | Technology | Rationale |
 |-----------|-----------|-----------|
-| Runtime | Node.js 18+ | Fast, TypeScript support, AWS SDK v3 |
+| Runtime | Node.js 18+ | Fast, TypeScript support |
 | Framework | Fastify | Lightweight, schema validation, Pino logging |
-| LLM | AWS Bedrock (Claude Sonnet) | Enterprise-ready, guardrails, no OpenAI dependency |
+| LLM | OpenAI (default) / AWS Bedrock | Flexibility, swap providers via env |
 | Document Export | `docx` library | Pure JS, no Office dependencies, well-maintained |
 | Markdown Parser | `marked` | Fast, standards-compliant, extensible |
 | HTML Parser | `jsdom` | Full DOM API for markdown→HTML→DOCX conversion |

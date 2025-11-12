@@ -2,14 +2,14 @@
 
 ## Top Priorities
 
-1) ✅ Configure LLM provider and set ENV variables (OpenAI API key or AWS Bedrock)
-2) ✅ Implement ability to restore previous draft versions
-3) ✅ Include "why included" notes for major clauses in response
-4) ✅ Implement critic pass to check factual support for each claim
-5) Add PDF/DOCX attachment upload to /v1/intake
-6) Implement automatic text extraction from uploaded files
-7) Merge extracted text with structured facts
-8) Implement schema validation unit tests
+1) Add error rate monitoring and per-request cost tracking
+2) Implement rate limiting per API key/client
+3) Add PII redaction in logs (configurable toggle)
+4) Replace in-memory storage with PostgreSQL/Redis
+5) Production deploy (Vercel/AWS) with proper secrets and IAM
+6) End-to-end tests: intake → generate → export
+7) Unit tests for DOCX conversion
+8) Fallback template unit tests
 
 ### Recent Changes
 - Added Bearer auth for /v1/* and multipart attachments + timestamps for intake
@@ -23,6 +23,9 @@
 - Enhanced generate responses with explanations for why major legal sections were included
 - Added critic pass: AI reviews drafts for factual accuracy and identifies unsupported claims
 - Added LLM provider abstraction: Support for both OpenAI and AWS Bedrock with simple env flag switch
+- Added PDF/DOCX file upload to /v1/intake with automatic text extraction using pdf-parse and mammoth
+- Implemented intelligent text merging: Extract incident details and damage amounts from uploaded documents
+- Added schema validation unit tests for facts merging and attachment processing
 
 ## Overview
 
@@ -490,25 +493,25 @@ open('data/facts_seed.json','w',encoding='utf-8').write(json.dumps(rows, indent=
 ### P1 Features (Should Have, Post-MVP)
 
 ### 1. Versioning
-- [ ] Track draft versions (v1, v2, etc.) per facts_id
-- [ ] Change log showing what changed between versions
-- [ ] Ability to restore previous version
+- [x] Track draft versions (v1, v2, etc.) per facts_id
+- [x] Change log showing what changed between versions
+- [x] Ability to restore previous version
 
 ### 2. Template Management
-- [ ] GET `/v1/templates` lists available templates
-- [ ] POST `/v1/templates` creates/updates firm templates
-- [ ] Template includes firm style variables (tone, letterhead, signature block)
+- [x] GET `/v1/templates` lists available templates
+- [x] POST `/v1/templates` creates/updates firm templates
+- [x] Template includes firm style variables (tone, letterhead, signature block)
 - [ ] Support multiple jurisdiction-specific templates
 
 ### 3. Explainability
-- [ ] Include "why included" notes for major clauses
+- [x] Include "why included" notes for major clauses
 - [ ] Hover tooltips in web UI showing rationale from prompt
-- [ ] Critic pass that checks factual support for each claim
+- [x] Critic pass that checks factual support for each claim
 
 ### 4. Text Extraction
-- [ ] Upload PDF/DOCX attachments via `/v1/intake`
-- [ ] Automatic text extraction from uploaded files
-- [ ] Merge extracted text with structured facts
+- [x] Upload PDF/DOCX attachments via `/v1/intake`
+- [x] Automatic text extraction from uploaded files
+- [x] Merge extracted text with structured facts
 
 ### Non-Functional Requirements
 
@@ -533,20 +536,20 @@ open('data/facts_seed.json','w',encoding='utf-8').write(json.dumps(rows, indent=
 
 ### Observability
 - [x] Request duration metrics
-- [x] Bedrock token usage tracking
+- [x] Bedrock/OpenAI token usage tracking
 - [ ] Error rate monitoring
 - [ ] Cost tracking per generate request
 
 ### Testing
 
-### Unit Tests (TBD)
-- [ ] Schema validation tests
+### Unit Tests
+- [x] Schema validation tests (facts merge & attachments)
 - [ ] Markdown to DOCX conversion tests
 - [ ] Fallback template generation tests
 
-### Integration Tests (TBD)
+### Integration Tests
 - [ ] End-to-end flow: intake → generate → export
-- [ ] Bedrock integration (requires credentials)
+- [ ] Provider integration (OpenAI/Bedrock)
 - [ ] Error handling scenarios
 
 ### Evaluation Suite (See EVALS.md)
