@@ -10,6 +10,7 @@ import type { MultipartFile } from '@fastify/multipart'
 import { randomUUID } from 'crypto'
 import { recordRequestDuration } from './metrics.js'
 import { LlmClient } from './llm/provider.js'
+import { extractTextFromFile } from './extract.js'
 
 const app = Fastify({ 
   logger: {
@@ -155,6 +156,78 @@ if (provider === 'openai') {
 
 console.log(`✅ Initialized ${provider.toUpperCase()} LLM client`)
 
+// Merge extracted text from attachments into structured facts
+export function mergeExtractedTextWithFacts(
+  facts: any,
+  attachments: Array<{ filename: string; extracted_text?: string }>
+): any {
+  // Create a copy of facts to avoid mutation
+  const mergedFacts = { ...facts }
+
+  // Collect all extracted text from attachments
+  const extractedTexts = attachments
+    .filter(att => att.extracted_text && att.extracted_text.trim())
+    .map(att => ({
+      filename: att.filename,
+      text: att.extracted_text!.trim()
+    }))
+
+  if (extractedTexts.length === 0) {
+    return mergedFacts
+  }
+
+  // Add extracted text to facts
+  mergedFacts.extracted_text = extractedTexts.map(et => ({
+    source: et.filename,
+    content: et.text
+  }))
+
+  // Try to intelligently merge specific fields if they appear to be missing
+  const allText = extractedTexts.map(et => et.text).join('\n\n')
+
+  // Look for missing incident description
+  if (!facts.incident || facts.incident.trim() === '' || facts.incident.includes('[TODO]')) {
+    // Try to extract incident description from text
+    const incidentPatterns = [
+      /incident[:\s]*(.*?)(?:\n|$)/i,
+      /accident[:\s]*(.*?)(?:\n|$)/i,
+      /occurred[:\s]*(.*?)(?:\n|$)/i
+    ]
+
+    for (const pattern of incidentPatterns) {
+      const match = allText.match(pattern)
+      if (match && match[1].trim().length > 10) {
+        mergedFacts.incident = match[1].trim()
+        break
+      }
+    }
+  }
+
+  // Look for missing damage amounts
+  if (!facts.damages?.amount_claimed || facts.damages.amount_claimed === 0) {
+    const amountPatterns = [
+      /\$([0-9,]+(?:\.[0-9]{2})?)/g,
+      /([0-9,]+(?:\.[0-9]{2})?) dollars?/i,
+      /amount[:\s]*\$?([0-9,]+(?:\.[0-9]{2})?)/i
+    ]
+
+    for (const pattern of amountPatterns) {
+      const matches = allText.match(pattern)
+      if (matches) {
+        // Take the first/largest amount found
+        const amounts = matches.map(m => parseFloat(m.replace(/[$,]/g, ''))).filter(a => a > 0)
+        if (amounts.length > 0) {
+          mergedFacts.damages = mergedFacts.damages || {}
+          mergedFacts.damages.amount_claimed = Math.max(...amounts)
+          break
+        }
+      }
+    }
+  }
+
+  return mergedFacts
+}
+
 // Utility function to generate change log between drafts
 function generateChangeLog(oldDraft: string, newDraft: string): string[] {
   const changes: string[] = []
@@ -229,24 +302,38 @@ app.post('/v1/intake', async (req, rep) => {
 
   // Handle multipart (file uploads) and JSON bodies
   let facts_json: any = undefined
-  let attachmentsMeta: Array<{ filename: string; mimetype: string; size: number }> = []
-  let attachmentsRaw: Array<{ filename: string; mimetype: string; buffer: Buffer }> = []
+  let attachmentsMeta: Array<{ filename: string; mimetype: string; size: number; extracted_text?: string }> = []
+  let attachmentsRaw: Array<{ filename: string; mimetype: string; buffer: Buffer; extracted_text?: string }> = []
 
   if ((req as any).isMultipart && (req as any).isMultipart()) {
     for await (const part of (req as any).parts()) {
       if (part.type === 'file') {
         const filePart = part as MultipartFile
         const buf = await bufferFromFile(filePart)
+        const mimeType = filePart.mimetype || 'application/octet-stream'
+
+        // Extract text from supported file types (PDF, DOCX)
+        let extractedText = ''
+        if (mimeType === 'application/pdf' ||
+            mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+            mimeType === 'application/msword' ||
+            mimeType.includes('word')) {
+          extractedText = await extractTextFromFile(buf, mimeType)
+        }
+
         attachmentsMeta.push({
           filename: filePart.filename || 'unnamed',
-          mimetype: filePart.mimetype || 'application/octet-stream',
-          size: buf.length
+          mimetype: mimeType,
+          size: buf.length,
+          extracted_text: extractedText || undefined
         })
+
         // Store raw for MVP; in production, move to object storage
         attachmentsRaw.push({
           filename: filePart.filename || 'unnamed',
-          mimetype: filePart.mimetype || 'application/octet-stream',
-          buffer: buf
+          mimetype: mimeType,
+          buffer: buf,
+          extracted_text: extractedText || undefined
         })
       } else if (part.type === 'field') {
         if (part.fieldname === 'facts_json') {
@@ -268,6 +355,11 @@ app.post('/v1/intake', async (req, rep) => {
         size: Number(a?.size || 0)
       }))
     }
+  }
+
+  // Merge extracted text from attachments into facts_json
+  if (facts_json && attachmentsRaw.length > 0) {
+    facts_json = mergeExtractedTextWithFacts(facts_json, attachmentsRaw)
   }
 
   if (!facts_json) {
