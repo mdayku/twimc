@@ -2,6 +2,7 @@
 
 ## Top Priorities
 
+### Backend (Complete ✅)
 1) ✅ Add PII redaction in logs (configurable toggle) - COMPLETED
 2) ✅ Replace in-memory storage with PostgreSQL/Redis - COMPLETED (PostgreSQL)
 3) ✅ End-to-end tests: intake → generate → export - COMPLETED
@@ -9,7 +10,21 @@
 5) ✅ Fallback template unit tests - COMPLETED
 6) ✅ Integration tests: error handling scenarios - COMPLETED
 7) ✅ Provider integration tests (OpenAI) - COMPLETED
-8) Production deploy (Vercel) with proper secrets - PENDING
+
+### Frontend (In Progress 🚧)
+1) Initialize React app (Next.js/Vite) with TypeScript, Tailwind, ESLint
+2) Set up API client with Bearer auth and error handling
+3) Create routing and main layout (Home, New Letter, History, Templates)
+4) Build intake form with file upload (drag-and-drop, PDF/DOCX support)
+5) Create facts input form with validation (parties, incident, damages)
+6) Implement draft generation page with loading state and markdown preview
+7) Build draft editor with markdown support and live preview
+8) Set up Google OAuth 2.0 (Cloud Console, Drive API, Docs API)
+9) Implement export to Google Docs with markdown conversion
+10) Create templates page (list, create, edit, preview)
+11) Build draft history page with version timeline
+12) Add UI polish (design system, toast notifications, accessibility)
+13) Deploy frontend to Vercel with environment variables
 
 ### Recent Changes
 - ✅ **Testing Suite Complete**: All unit tests (schema, PII, DOCX, fallback), integration tests (e2e, error handling), and provider tests passing
