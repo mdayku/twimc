@@ -16,6 +16,7 @@
 - Implemented correlation ID logging (x-request-id) with duration in server logs
 - Added Bedrock retry with exponential backoff and prompt-level guardrails
 - Added in-process metrics: per-route request duration (avg) and Bedrock token usage (estimated)
+- Implemented draft versioning (v1/v2) with automatic change logs and version history API
 
 ## Overview
 
@@ -163,9 +164,15 @@ X-Request-Id: <optional-correlation-id>
   "draft_md": "# Demand Letter\n\n## Date and Recipient\n\n...",
   "issues": [
     "Draft contains 2 TODO placeholder(s) for missing information"
-  ]
+  ],
+  "version": 1,
+  "generated_at": "2024-11-12T17:45:00.000Z",
+  "change_log": ["Initial draft generated"],
+  "facts_id": "facts_1"
 }
 ```
+
+**Versioning**: Each `/v1/generate` call creates a new version. Use `version` parameter to retrieve specific versions.
 
 **Draft Structure** (sections in markdown):
 - Recipient block and date
@@ -200,6 +207,35 @@ X-Request-Id: <optional-correlation-id>
 - **Content-Type**: `application/vnd.openxmlformats-officedocument.wordprocessingml.document`
 - **Content-Disposition**: `attachment; filename="demand_letter.docx"`
 - **Body**: Binary DOCX file
+
+#### List Draft Versions
+```http
+GET /v1/drafts/:facts_id
+```
+
+**Purpose**: List all draft versions for a facts record
+
+**Response**: 200 OK
+```json
+{
+  "facts_id": "facts_1",
+  "total_drafts": 2,
+  "drafts": [
+    {
+      "version": 1,
+      "generated_at": "2024-11-12T17:45:00.000Z",
+      "issues_count": 0,
+      "change_log": ["Initial draft generated"]
+    },
+    {
+      "version": 2,
+      "generated_at": "2024-11-12T17:46:00.000Z",
+      "issues_count": 1,
+      "change_log": ["Modified section: Damages", "Resolved 1 TODO placeholder"]
+    }
+  ]
+}
+```
 
 ### Error Response Format
 ```json

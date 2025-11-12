@@ -69,9 +69,81 @@ app.addHook('onResponse', async (req, rep) => {
   }
 })
 
-// In-memory storage for MVP (facts by ID)
-const factsStore = new Map<string, any>()
+// In-memory storage for MVP (facts by ID with versioning)
+interface FactsRecord {
+  facts_id: string
+  facts_json: any
+  attachments: any[]
+  created_at: string
+  drafts: DraftRecord[]
+}
+
+interface DraftRecord {
+  version: number
+  draft_md: string
+  issues: string[]
+  generated_at: string
+  change_log?: string[]
+  input_hash?: string  // hash of inputs for change detection
+}
+
+const factsStore = new Map<string, FactsRecord>()
 let factsIdCounter = 1
+
+// Utility function to generate change log between drafts
+function generateChangeLog(oldDraft: string, newDraft: string): string[] {
+  const changes: string[] = []
+
+  // Simple diff: split by sections and compare
+  const oldSections = oldDraft.split(/^## /m).slice(1).map(s => s.trim())
+  const newSections = newDraft.split(/^## /m).slice(1).map(s => s.trim())
+
+  const oldSectionMap = new Map<string, string>()
+  const newSectionMap = new Map<string, string>()
+
+  oldSections.forEach(section => {
+    const [title, ...content] = section.split('\n', 1)
+    oldSectionMap.set(title.trim(), content.join('\n').trim())
+  })
+
+  newSections.forEach(section => {
+    const [title, ...content] = section.split('\n', 1)
+    newSectionMap.set(title.trim(), content.join('\n').trim())
+  })
+
+  // Check for new/modified/removed sections
+  for (const [title, content] of newSectionMap) {
+    if (!oldSectionMap.has(title)) {
+      changes.push(`Added section: ${title}`)
+    } else if (oldSectionMap.get(title) !== content) {
+      changes.push(`Modified section: ${title}`)
+    }
+  }
+
+  for (const title of oldSectionMap.keys()) {
+    if (!newSectionMap.has(title)) {
+      changes.push(`Removed section: ${title}`)
+    }
+  }
+
+  // Check for TODO changes
+  const oldTodos = oldDraft.match(/\[TODO:[^\]]+\]/g) || []
+  const newTodos = newDraft.match(/\[TODO:[^\]]+\]/g) || []
+
+  if (newTodos.length < oldTodos.length) {
+    changes.push(`Resolved ${oldTodos.length - newTodos.length} TODO placeholder(s)`)
+  } else if (newTodos.length > oldTodos.length) {
+    changes.push(`Added ${newTodos.length - oldTodos.length} TODO placeholder(s)`)
+  }
+
+  return changes.length > 0 ? changes : ['Minor content updates']
+}
+
+// Generate hash of inputs for change detection
+function generateInputHash(facts: any, templateMd?: string, firmStyle?: any): string {
+  const input = JSON.stringify({ facts, templateMd, firmStyle })
+  return require('crypto').createHash('md5').update(input).digest('hex')
+}
 
 async function bufferFromFile(file: MultipartFile): Promise<Buffer> {
   const chunks: Buffer[] = []
@@ -138,30 +210,33 @@ app.post('/v1/intake', async (req, rep) => {
   }
 
   const factsId = `facts_${factsIdCounter++}`
-  factsStore.set(factsId, {
+  const factsRecord: FactsRecord = {
+    facts_id: factsId,
     facts_json,
-    attachments_meta: attachmentsMeta,
-    attachments_raw: attachmentsRaw, // only present for multipart uploads
-    created_at: receivedAt
-  })
+    attachments: attachmentsMeta,
+    created_at: receivedAt,
+    drafts: []
+  }
+  factsStore.set(factsId, factsRecord)
 
   app.log.info({ factsId, receivedAt, attachments_count: attachmentsMeta.length }, 'Facts stored')
   return { facts_id: factsId, attachments: attachmentsMeta, created_at: receivedAt }
 })
 
-// Generate endpoint - produce draft from facts
+// Generate endpoint - produce draft from facts (with versioning)
 app.post('/v1/generate', async (req, rep) => {
-  const { facts_id, facts_json, template_md, firm_style } = (req.body as any) || {}
-  
+  const { facts_id, facts_json, template_md, firm_style, version } = (req.body as any) || {}
+
+  let factsRecord: FactsRecord | undefined
   let facts = facts_json
-  
+
   // Allow either facts_id or direct facts_json
   if (facts_id) {
-    const stored = factsStore.get(facts_id)
-    if (!stored) {
+    factsRecord = factsStore.get(facts_id)
+    if (!factsRecord) {
       return rep.code(404).send({ error: 'facts_id not found' })
     }
-    facts = stored.facts_json
+    facts = factsRecord.facts_json
   }
 
   if (!facts) {
@@ -170,10 +245,89 @@ app.post('/v1/generate', async (req, rep) => {
 
   try {
     const { draft_md, issues } = await generateWithBedrock(facts, template_md, firm_style)
-    return { draft_md, issues }
+
+    // Create new draft version
+    const inputHash = generateInputHash(facts, template_md, firm_style)
+    const newVersion = (factsRecord?.drafts.length || 0) + 1
+    const generatedAt = new Date().toISOString()
+
+    const newDraft: DraftRecord = {
+      version: newVersion,
+      draft_md,
+      issues,
+      generated_at: generatedAt,
+      input_hash: inputHash,
+      change_log: []
+    }
+
+    // Generate change log compared to previous version
+    if (factsRecord && factsRecord.drafts.length > 0) {
+      const prevDraft = factsRecord.drafts[factsRecord.drafts.length - 1]
+      newDraft.change_log = generateChangeLog(prevDraft.draft_md, draft_md)
+    } else {
+      newDraft.change_log = ['Initial draft generated']
+    }
+
+    // Store the draft if we have a facts record
+    if (factsRecord) {
+      factsRecord.drafts.push(newDraft)
+      factsStore.set(facts_id, factsRecord)
+    }
+
+    // Return response with versioning info
+    const response = {
+      draft_md,
+      issues,
+      version: newVersion,
+      generated_at: generatedAt,
+      change_log: newDraft.change_log,
+      facts_id: factsRecord?.facts_id || facts_id
+    }
+
+    // If specific version requested, return that instead
+    if (version && factsRecord) {
+      const requestedDraft = factsRecord.drafts.find(d => d.version === version)
+      if (requestedDraft) {
+        return {
+          draft_md: requestedDraft.draft_md,
+          issues: requestedDraft.issues,
+          version: requestedDraft.version,
+          generated_at: requestedDraft.generated_at,
+          change_log: requestedDraft.change_log,
+          facts_id: factsRecord.facts_id
+        }
+      }
+    }
+
+    return response
+
   } catch (err: any) {
     app.log.error({ err }, 'Generation failed')
     return rep.code(500).send({ error: 'Generation failed', details: err.message })
+  }
+})
+
+// List draft versions for a facts_id
+app.get('/v1/drafts/:facts_id', async (req, rep) => {
+  const { facts_id } = req.params as { facts_id: string }
+
+  const factsRecord = factsStore.get(facts_id)
+  if (!factsRecord) {
+    return rep.code(404).send({ error: 'facts_id not found' })
+  }
+
+  // Return summary of drafts without full content
+  const drafts = factsRecord.drafts.map(draft => ({
+    version: draft.version,
+    generated_at: draft.generated_at,
+    issues_count: draft.issues.length,
+    change_log: draft.change_log
+  }))
+
+  return {
+    facts_id,
+    total_drafts: drafts.length,
+    drafts
   }
 })
 
