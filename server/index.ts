@@ -451,6 +451,53 @@ app.post('/v1/templates', async (req, rep) => {
   }
 })
 
+// Restore previous draft version as new draft
+app.post('/v1/restore/:facts_id', async (req, rep) => {
+  const { facts_id } = req.params as { facts_id: string }
+  const { version } = (req.body as any) || {}
+
+  if (!version || typeof version !== 'number') {
+    return rep.code(400).send({ error: 'version number is required' })
+  }
+
+  const factsRecord = factsStore.get(facts_id)
+  if (!factsRecord) {
+    return rep.code(404).send({ error: 'facts_id not found' })
+  }
+
+  const sourceDraft = factsRecord.drafts.find(d => d.version === version)
+  if (!sourceDraft) {
+    return rep.code(404).send({ error: `version ${version} not found` })
+  }
+
+  // Create new draft based on the source draft
+  const newVersion = factsRecord.drafts.length + 1
+  const now = new Date().toISOString()
+
+  const restoredDraft: DraftRecord = {
+    version: newVersion,
+    draft_md: sourceDraft.draft_md,
+    issues: [], // Clear issues for restored draft
+    generated_at: now,
+    input_hash: sourceDraft.input_hash,
+    change_log: [`Restored from version ${version}`]
+  }
+
+  factsRecord.drafts.push(restoredDraft)
+  factsStore.set(facts_id, factsRecord)
+
+  app.log.info({ facts_id, from_version: version, to_version: newVersion }, 'Draft version restored')
+
+  return {
+    facts_id,
+    restored_from_version: version,
+    new_version: newVersion,
+    draft_md: restoredDraft.draft_md,
+    generated_at: now,
+    change_log: restoredDraft.change_log
+  }
+})
+
 // Export DOCX endpoint
 app.post('/v1/export/docx', async (req, rep) => {
   const { draft_md, letterhead } = (req.body as any) || {}

@@ -3,7 +3,7 @@
 ## Top Priorities
 
 1) Configure AWS Bedrock access and set ENV variables (API tokens, model, region)
-2) Implement ability to restore previous draft versions
+2) ✅ Implement ability to restore previous draft versions
 3) Include "why included" notes for major clauses in response
 4) Implement critic pass to check factual support for each claim
 5) Add PDF/DOCX attachment upload to /v1/intake
@@ -17,6 +17,7 @@
 - Added Bedrock retry with exponential backoff and prompt-level guardrails
 - Added in-process metrics: per-route request duration (avg) and Bedrock token usage (estimated)
 - Implemented draft versioning (v1/v2) with automatic change logs and version history API
+- Added draft restore functionality (POST /v1/restore/:facts_id) to create new drafts from previous versions
 - Added template management API (GET/POST /v1/templates) with filesystem-backed storage
 
 ## Overview
@@ -173,7 +174,7 @@ X-Request-Id: <optional-correlation-id>
 }
 ```
 
-**Versioning**: Each `/v1/generate` call creates a new version. Use `version` parameter to retrieve specific versions.
+**Versioning**: Each `/v1/generate` call creates a new version. Use `version` parameter to retrieve specific versions, or `POST /v1/restore/:facts_id` to create a new draft from a previous version.
 
 **Draft Structure** (sections in markdown):
 - Recipient block and date
@@ -305,6 +306,34 @@ POST /v1/templates
     "updated_at": "2024-11-12T17:45:00.000Z"
   },
   "action": "created"
+}
+```
+
+#### Restore Draft Version
+```http
+POST /v1/restore/:facts_id
+```
+
+**Purpose**: Create a new draft by restoring content from a previous version
+
+**Request Body**:
+```json
+{
+  "version": 2
+}
+```
+
+**Required Fields**: `version` (number)
+
+**Response**: 200 OK
+```json
+{
+  "facts_id": "facts_1",
+  "restored_from_version": 2,
+  "new_version": 3,
+  "draft_md": "# Demand Letter\n\n...",
+  "generated_at": "2024-11-12T17:50:00.000Z",
+  "change_log": ["Restored from version 2"]
 }
 ```
 
