@@ -4,7 +4,7 @@
 
 1) Configure AWS Bedrock access and set ENV variables (API tokens, model, region)
 2) ✅ Implement ability to restore previous draft versions
-3) Include "why included" notes for major clauses in response
+3) ✅ Include "why included" notes for major clauses in response
 4) Implement critic pass to check factual support for each claim
 5) Add PDF/DOCX attachment upload to /v1/intake
 6) Implement automatic text extraction from uploaded files
@@ -20,6 +20,7 @@
 - Added draft restore functionality (POST /v1/restore/:facts_id) to create new drafts from previous versions
 - Added template management API (GET/POST /v1/templates) with filesystem-backed storage
 - Added draft version restore functionality (PUT /v1/drafts/:facts_id/:version/restore)
+- Enhanced generate responses with explanations for why major legal sections were included
 
 ## Overview
 
@@ -168,6 +169,13 @@ X-Request-Id: <optional-correlation-id>
   "issues": [
     "Draft contains 2 TODO placeholder(s) for missing information"
   ],
+  "explanations": {
+    "Introduction": "Included to formally introduce the demand and establish the sender's position",
+    "Statement of Facts": "Included to provide chronological narrative of the events based on provided incident details",
+    "Liability": "Included to explain why the defendant is legally responsible for the damages",
+    "Damages": "Included to quantify the financial losses suffered based on provided damage amounts",
+    "Demand": "Included to clearly state the compensation requested and deadline for response"
+  },
   "version": 1,
   "generated_at": "2024-11-12T17:45:00.000Z",
   "change_log": ["Initial draft generated"],
@@ -175,7 +183,7 @@ X-Request-Id: <optional-correlation-id>
 }
 ```
 
-**Versioning**: Each `/v1/generate` call creates a new version. Use `version` parameter to retrieve specific versions, or `POST /v1/restore/:facts_id` to create a new draft from a previous version.
+**Versioning**: Each `/v1/generate` call creates a new version. Use `version` parameter to retrieve specific versions, or `PUT /v1/drafts/:facts_id/:version/restore` to create a new draft from a previous version.
 
 **Draft Structure** (sections in markdown):
 - Recipient block and date

@@ -24,7 +24,11 @@ Do NOT hallucinate facts. Only use information explicitly provided in the facts 
 Format your response as clean markdown with clear section headings.
 
 After the demand letter, include explanations for major sections in this format:
-[EXPLANATION: Section Name] Brief reason why this section was included based on the provided facts.
+[EXPLANATION: Introduction] Brief reason why this section was included based on the provided facts.
+[EXPLANATION: Statement of Facts] Brief reason why this section was included based on the provided facts.
+[EXPLANATION: Liability] Brief reason why this section was included based on the provided facts.
+[EXPLANATION: Damages] Brief reason why this section was included based on the provided facts.
+[EXPLANATION: Demand] Brief reason why this section was included based on the provided facts.
 
 Guardrails:
 - Do not include personal health information (PHI) or other sensitive data beyond what is explicitly present in facts.
