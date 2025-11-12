@@ -42,11 +42,16 @@ const app = Fastify({
 })
 
 // Register CORS for Vercel frontend
-await app.register(cors, {
-  origin: true, // Allow all origins for now (can restrict to Vercel domain later)
-  credentials: true
-})
-console.log('✅ CORS enabled for all origins')
+try {
+  await app.register(cors, {
+    origin: true, // Allow all origins for now (can restrict to Vercel domain later)
+    credentials: true
+  })
+  console.log('✅ CORS enabled for all origins')
+} catch (error) {
+  console.error('❌ Failed to register CORS:', error)
+  throw error
+}
 
 // Register multipart for attachments (MVP limits)
 await app.register(multipart, {
@@ -852,7 +857,9 @@ export { app }
 // Only start server if not in Vercel environment
 if (!process.env.VERCEL) {
   const port = parseInt(process.env.PORT || '8787', 10)
-  const host = '0.0.0.0'
+  const host = process.env.HOST || '0.0.0.0'
+  
+  console.log(`🚀 Starting server on ${host}:${port}`)
 
   app.listen({ port, host }, (err, address) => {
     if (err) {
