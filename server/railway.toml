@@ -2,7 +2,7 @@
 builder = "nixpacks"
 
 [deploy]
-startCommand = "cd server && npm run dev"
+startCommand = "npm run dev"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10
 
