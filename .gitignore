@@ -22,7 +22,9 @@ Thumbs.db
 
 # Test output
 coverage/
-*.test.js
+# Test source files are tracked, but ignore test output/artifacts
+test_output/
+*.test.output.js
 
 # DOCX test files
 *.docx
