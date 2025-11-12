@@ -570,3 +570,270 @@ A feature is "done" when:
 5. Updated in this document with [x] checkbox
 6. Documented in README or API_SPEC as appropriate
 
+---
+
+## Frontend Development Plan
+
+### Project Overview
+Build a React-based web application for the Steno Demand Letter Generator that allows attorneys to upload documents, generate AI-powered demand letters, and export to Google Docs for collaboration.
+
+**Demo Goal:** Complete intake → generate → export to Google Docs workflow
+
+### Phase 1: Project Setup & Foundation (P0)
+
+#### 1.1 Initialize React Application
+- [ ] Create React app with TypeScript (Vite or Next.js)
+- [ ] Set up project structure (components, pages, hooks, utils, types)
+- [ ] Configure Tailwind CSS or preferred styling solution
+- [ ] Set up ESLint, Prettier, and TypeScript strict mode
+- [ ] Create `.env` file with API base URL and tokens
+
+#### 1.2 API Client Setup
+- [ ] Create API client service (`/src/services/api.ts`)
+- [ ] Implement Bearer token authentication
+- [ ] Add request/response interceptors for error handling
+- [ ] Create TypeScript types for all API endpoints
+- [ ] Add loading states and error handling utilities
+
+#### 1.3 Routing & Layout
+- [ ] Set up React Router (or Next.js routing)
+- [ ] Create main layout component with navigation
+- [ ] Define routes: Home, New Letter, Letter History, Templates, Settings
+- [ ] Add protected route wrapper (if multi-user in future)
+
+### Phase 2: Core Features - Intake & Generation (P0)
+
+#### 2.1 Document Upload & Facts Intake
+**User Story:** "As an attorney, I want to upload source documents and generate a draft demand letter"
+
+- [ ] Create `IntakePage` component
+- [ ] Build file upload component (drag-and-drop + click to upload)
+  - [ ] Support PDF and DOCX files
+  - [ ] Show file preview/name after upload
+  - [ ] Display file size and type
+  - [ ] Allow multiple file uploads
+- [ ] Create facts input form with fields:
+  - [ ] Parties (plaintiff, defendant, plaintiff_attorney)
+  - [ ] Incident description (textarea with character count)
+  - [ ] Venue (text input)
+  - [ ] Damages (amount_claimed, specials, generals)
+  - [ ] Optional: Damage breakdown (dynamic list)
+- [ ] Add form validation (Zod or Yup)
+- [ ] Implement "Submit Facts" button → POST `/v1/intake`
+- [ ] Handle multipart/form-data for file uploads
+- [ ] Display success message with `facts_id`
+- [ ] Show loading spinner during upload/processing
+
+#### 2.2 Draft Generation
+**User Story:** "Generate a draft demand letter using AI"
+
+- [ ] Create `GeneratePage` component (or modal)
+- [ ] Display submitted facts summary (read-only)
+- [ ] Add "Generate Draft" button → POST `/v1/generate`
+- [ ] Show generation progress indicator (with estimated time: ~15s)
+- [ ] Display generated draft in markdown preview
+- [ ] Show metadata: version, generated_at, issues
+- [ ] Add "Regenerate" button for new versions
+- [ ] Display version history (v1, v2, v3...)
+
+#### 2.3 Draft Editor & Preview
+**User Story:** "Edit and refine the demand letter"
+
+- [ ] Create `DraftEditor` component
+- [ ] Implement markdown editor (react-markdown-editor-lite or similar)
+- [ ] Add rich text formatting toolbar
+- [ ] Show live preview of formatted letter
+- [ ] Add "Save Draft" functionality (local state or API)
+- [ ] Implement undo/redo functionality
+- [ ] Add word count and character count
+
+### Phase 3: Export to Google Docs (P0 - Demo Critical)
+
+#### 3.1 Google Drive Integration
+**User Story:** "Export the final demand letter to Google Docs for collaboration"
+
+- [ ] Set up Google OAuth 2.0 client (Google Cloud Console)
+- [ ] Add Google Drive API and Google Docs API scopes
+- [ ] Create `GoogleAuthButton` component
+- [ ] Implement OAuth flow (popup or redirect)
+- [ ] Store access token securely (session storage or state)
+- [ ] Add "Export to Google Docs" button on draft page
+
+#### 3.2 Export Functionality
+- [ ] Create `exportToGoogleDocs` service function
+- [ ] Convert markdown draft to Google Docs format
+  - [ ] Use Google Docs API `documents.create`
+  - [ ] Map markdown headings to Google Docs styles
+  - [ ] Preserve formatting (bold, italic, lists)
+- [ ] Create document in user's Google Drive
+- [ ] Add document metadata (title: "Demand Letter - [Plaintiff] v [Defendant]")
+- [ ] Return shareable link to created document
+- [ ] Display success modal with link to open in Google Docs
+- [ ] Add "Copy Link" button for easy sharing
+
+#### 3.3 Post-Export Actions
+- [ ] Show "Open in Google Docs" button (opens in new tab)
+- [ ] Display sharing instructions (invite collaborators, comment, etc.)
+- [ ] Add option to export to DOCX as fallback (existing API endpoint)
+
+### Phase 4: Template Management (P0)
+
+#### 4.1 Template Library
+**User Story:** "Create and manage firm-specific demand letter templates"
+
+- [ ] Create `TemplatesPage` component
+- [ ] Fetch and display all templates → GET `/v1/templates`
+- [ ] Show template cards with: name, description, created_at
+- [ ] Add "Create New Template" button
+- [ ] Implement template preview modal
+
+#### 4.2 Template Editor
+- [ ] Create `TemplateEditor` component
+- [ ] Add form fields: name, description, content (markdown)
+- [ ] Show template syntax guide (placeholders like `{{plaintiff}}`)
+- [ ] Add "Save Template" button → POST `/v1/templates`
+- [ ] Implement template validation
+- [ ] Add "Use Template" button on intake page (dropdown selector)
+
+#### 4.3 Template Selection in Generation
+- [ ] Add template selector to intake form
+- [ ] Pass `template_id` to `/v1/generate` endpoint
+- [ ] Show which template was used in draft metadata
+
+### Phase 5: Draft History & Versioning (P1)
+
+#### 5.1 Draft History Page
+- [ ] Create `HistoryPage` component
+- [ ] Fetch all facts records (need new API endpoint or extend existing)
+- [ ] Display list of past demand letters with:
+  - [ ] Plaintiff vs Defendant
+  - [ ] Created date
+  - [ ] Number of versions
+  - [ ] Status (draft, exported)
+- [ ] Add search/filter functionality
+- [ ] Implement pagination
+
+#### 5.2 Version Management
+- [ ] Fetch draft versions → GET `/v1/drafts/:facts_id`
+- [ ] Display version timeline (v1, v2, v3...)
+- [ ] Show diff between versions (react-diff-viewer)
+- [ ] Add "Restore Version" button → POST `/v1/restore/:facts_id`
+- [ ] Highlight current/active version
+
+### Phase 6: UI/UX Polish (P1)
+
+#### 6.1 Design System
+- [ ] Create reusable component library:
+  - [ ] Button (primary, secondary, danger)
+  - [ ] Input, Textarea, Select
+  - [ ] Card, Modal, Toast notifications
+  - [ ] Loading spinner, Progress bar
+  - [ ] File upload dropzone
+- [ ] Implement consistent color scheme (legal/professional theme)
+- [ ] Add responsive design (mobile, tablet, desktop)
+- [ ] Create empty states for all pages
+
+#### 6.2 User Feedback & Notifications
+- [ ] Add toast notifications for success/error messages
+- [ ] Implement loading states for all async operations
+- [ ] Add confirmation modals for destructive actions
+- [ ] Show validation errors inline on forms
+- [ ] Add helpful tooltips and hints
+
+#### 6.3 Accessibility
+- [ ] Add ARIA labels to all interactive elements
+- [ ] Ensure keyboard navigation works throughout
+- [ ] Test with screen readers
+- [ ] Add focus indicators
+- [ ] Ensure color contrast meets WCAG AA standards
+
+### Phase 7: Advanced Features (P2 - Nice to Have)
+
+#### 7.1 Real-time Collaboration Prep
+- [ ] Add WebSocket connection setup (for future real-time editing)
+- [ ] Implement optimistic UI updates
+- [ ] Add conflict resolution UI (if multiple users edit)
+
+#### 7.2 Critic Pass Integration
+- [ ] Add "Review Draft" button → POST `/v1/critic`
+- [ ] Display AI-identified issues in sidebar
+- [ ] Highlight problematic sections in editor
+- [ ] Add "Resolve" button for each issue
+
+#### 7.3 Metrics & Analytics
+- [ ] Add analytics tracking (Plausible or similar)
+- [ ] Track: letters generated, export method, generation time
+- [ ] Create admin dashboard for usage stats
+
+### Phase 8: Testing & Deployment (P0)
+
+#### 8.1 Testing
+- [ ] Write unit tests for utility functions
+- [ ] Add component tests (React Testing Library)
+- [ ] Create E2E tests for critical flows (Playwright or Cypress)
+- [ ] Test Google OAuth flow end-to-end
+- [ ] Test file upload with large files
+
+#### 8.2 Deployment
+- [ ] Deploy to Vercel (or Netlify)
+- [ ] Configure environment variables
+- [ ] Set up custom domain (if available)
+- [ ] Add HTTPS/SSL
+- [ ] Configure CORS for API calls
+- [ ] Set up error monitoring (Sentry)
+
+### Technical Stack Recommendations
+
+**Core:**
+- Framework: Next.js 14 (App Router) or Vite + React 18
+- Language: TypeScript
+- Styling: Tailwind CSS + shadcn/ui components
+- State Management: Zustand or React Context
+- Forms: React Hook Form + Zod validation
+- API Client: Axios or native fetch with custom wrapper
+
+**Key Libraries:**
+- Markdown: `react-markdown` + `react-markdown-editor-lite`
+- File Upload: `react-dropzone`
+- Google APIs: `@react-oauth/google` + `gapi-script`
+- Notifications: `react-hot-toast` or `sonner`
+- Routing: Next.js routing or `react-router-dom`
+- Date Formatting: `date-fns`
+- Icons: `lucide-react` or `react-icons`
+
+### Demo Day Checklist (Minimum Viable Demo)
+
+**Must Have for Demo:**
+- [x] Backend API running and tested
+- [ ] Landing page with clear value proposition
+- [ ] Intake form with file upload (PDF/DOCX)
+- [ ] Generate button that shows loading state
+- [ ] Draft preview with markdown rendering
+- [ ] Export to Google Docs button (working OAuth flow)
+- [ ] Success modal showing Google Docs link
+- [ ] Basic styling (professional, clean)
+
+**Demo Script:**
+1. **Intro:** "This is Steno's Demand Letter Generator"
+2. **Upload:** "I'll upload this accident report PDF..."
+3. **Fill Facts:** "Enter plaintiff, defendant, and damages..."
+4. **Generate:** "Click generate... AI drafts the letter in ~15 seconds"
+5. **Review:** "Here's the draft with all legal sections..."
+6. **Export:** "Now I'll export to Google Docs for collaboration..."
+7. **Collaborate:** "I can now invite colleagues, add comments, track changes..."
+
+### Priority Order for Development
+
+1. **Day 1:** Project setup, API client, intake form, file upload
+2. **Day 2:** Generate draft, markdown preview, basic styling
+3. **Day 3:** Google OAuth, export to Google Docs, success flow
+4. **Day 4:** Templates, draft history, UI polish
+5. **Day 5:** Testing, deployment, demo rehearsal
+
+### Notes
+- Focus on **demo-ready** features first (P0)
+- Keep UI simple and professional
+- Google Docs export is the "wow" factor for demo
+- Test OAuth flow thoroughly (it can be finicky)
+- Have DOCX export as backup if Google Docs fails during demo
+
