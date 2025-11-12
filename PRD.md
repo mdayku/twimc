@@ -11,6 +11,11 @@
 7) Implement draft versioning (v1/v2) with change log
 8) Add template management API: GET/POST /v1/templates
 
+### Recent Changes
+- Added Bearer auth for /v1/* and multipart attachments + timestamps for intake
+- Implemented correlation ID logging (x-request-id) with duration in server logs
+- Added Bedrock retry with exponential backoff and prompt-level guardrails
+
 ## Overview
 
 Steno is an AI-powered legal document generator that helps attorneys and paralegals create professional demand letters quickly and accurately. The system ingests case facts and generates structured legal documents using AWS Bedrock (Claude Sonnet), with export to Word format for final editing.

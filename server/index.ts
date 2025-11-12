@@ -4,6 +4,7 @@ import { generateWithBedrock } from './bedrock.js'
 import { markdownToDocxBuffer } from './docx.js'
 import multipart from '@fastify/multipart'
 import type { MultipartFile } from '@fastify/multipart'
+import { randomUUID } from 'crypto'
 
 dotenv.config({ path: '../.env' })
 
@@ -29,6 +30,13 @@ const API_TOKENS = (process.env.API_TOKENS || process.env.API_TOKEN || '')
   .filter(Boolean)
 
 app.addHook('onRequest', async (req, rep) => {
+  // Correlation ID: honor incoming or generate new
+  const incomingCid = (req.headers['x-request-id'] as string) || ''
+  const cid = incomingCid && incomingCid.trim() ? incomingCid.trim() : randomUUID()
+  ;(req as any).correlationId = cid
+  ;(req as any).startHrTime = process.hrtime.bigint()
+  rep.header('x-request-id', cid)
+
   // Leave health check open
   if (!req.url.startsWith('/v1/')) return
   if (API_TOKENS.length === 0) {
@@ -39,6 +47,23 @@ app.addHook('onRequest', async (req, rep) => {
   const token = typeof auth === 'string' && auth.startsWith('Bearer ') ? auth.slice(7).trim() : ''
   if (!token || !API_TOKENS.includes(token)) {
     return rep.code(401).send({ error: 'Unauthorized' })
+  }
+})
+
+app.addHook('onResponse', async (req, rep) => {
+  try {
+    const start = (req as any).startHrTime as bigint | undefined
+    const cid = (req as any).correlationId as string | undefined
+    const durationMs = start ? Number((process.hrtime.bigint() - start) / 1000000n) : undefined
+    req.log.info({
+      cid,
+      method: req.method,
+      url: req.url,
+      statusCode: rep.statusCode,
+      durationMs
+    }, 'request completed')
+  } catch {
+    // best-effort logging
   }
 })
 
