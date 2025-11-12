@@ -38,15 +38,24 @@ export class OpenAILlmClient implements LlmClient {
     const userPrompt = this.buildUserPrompt(facts, templateMd, firmStyle)
 
     try {
-      const completion = await this.client.chat.completions.create({
+      // Adjust parameters based on model capabilities
+      const requestParams: any = {
         model: this.modelId,
         messages: [
           { role: 'system', content: this.SYSTEM_PROMPT },
           { role: 'user', content: userPrompt }
         ],
-        max_tokens: 4096,
-        temperature: 0.3,
-      })
+        max_completion_tokens: 4096,
+      }
+
+      // Some models don't support temperature adjustment
+      if (this.modelId.includes('gpt-4o') || this.modelId.includes('gpt-5')) {
+        requestParams.temperature = 1.0 // Use default for these models
+      } else {
+        requestParams.temperature = 0.3
+      }
+
+      const completion = await this.client.chat.completions.create(requestParams)
 
       const response = completion.choices[0]?.message?.content || ''
       const usage = completion.usage
@@ -225,15 +234,23 @@ Format your response as:
 If there are no unsupported claims, respond with "All claims are factually supported."`
 
     try {
-      const completion = await this.client.chat.completions.create({
+      const requestParams: any = {
         model: this.modelId,
         messages: [
           { role: 'system', content: 'You are a meticulous legal fact-checker. Only identify claims that lack factual support.' },
           { role: 'user', content: criticPrompt }
         ],
-        max_tokens: 1024,
-        temperature: 0.1,
-      })
+        max_completion_tokens: 1024,
+      }
+
+      // Some models don't support temperature adjustment
+      if (this.modelId.includes('gpt-4o') || this.modelId.includes('gpt-5')) {
+        requestParams.temperature = 1.0 // Use default for these models
+      } else {
+        requestParams.temperature = 0.1
+      }
+
+      const completion = await this.client.chat.completions.create(requestParams)
 
       const criticResponse = completion.choices[0]?.message?.content || ''
 
