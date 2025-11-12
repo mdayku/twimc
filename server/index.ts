@@ -3,6 +3,7 @@ import dotenv from 'dotenv'
 dotenv.config({ path: '../.env' })
 
 import Fastify from 'fastify'
+import cors from '@fastify/cors'
 import { markdownToDocxBuffer } from './docx.js'
 import multipart from '@fastify/multipart'
 import { createHash } from 'crypto'
@@ -38,6 +39,12 @@ const app = Fastify({
       err: createErrorSerializer(piiConfig)
     }
   }
+})
+
+// Register CORS for Vercel frontend
+await app.register(cors, {
+  origin: true, // Allow all origins for now (can restrict to Vercel domain later)
+  credentials: true
 })
 
 // Register multipart for attachments (MVP limits)
