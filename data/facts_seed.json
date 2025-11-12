@@ -1,0 +1,69 @@
+[
+  {
+    "parties": {
+      "plaintiff": "Consumer",
+      "defendant": "ACME Bank Corporation"
+    },
+    "incident": "On January 15, 2024, I noticed unauthorized charges totaling $2,450 on my credit card statement. I immediately contacted ACME Bank to dispute these charges and requested a provisional credit. Despite multiple calls and submitting all required documentation including police report and affidavits, the bank has failed to issue the credit within the required timeframe. The unauthorized charges have caused my account to go overlimit, resulting in additional fees of $350. I have been a customer for 15 years and never had any issues until now.",
+    "damages": {
+      "amount_claimed": 2800,
+      "specials": 2800,
+      "breakdown": [
+        { "item": "Unauthorized charges", "amount": 2450 },
+        { "item": "Overlimit fees", "amount": 350 }
+      ]
+    },
+    "venue": "California",
+    "category": "Credit card fraud",
+    "incident_date": "2024-01-15",
+    "demand_deadline_days": 30,
+    "exhibits": [
+      { "name": "Bank statements", "description": "January 2024 statement showing unauthorized charges" },
+      { "name": "Police report", "description": "Identity theft report filed January 16, 2024" }
+    ]
+  },
+  {
+    "parties": {
+      "plaintiff": "Consumer",
+      "defendant": "QuickLoan Finance LLC"
+    },
+    "incident": "I took out a personal loan with QuickLoan Finance in March 2023 for $5,000 at an agreed APR of 12%. However, upon reviewing my payment history, I discovered that the company has been charging me an effective APR of 28% through hidden fees and charges not disclosed in the original loan documents. Despite making regular payments totaling $6,200 over 18 months, my principal balance has only decreased by $800. When I contacted customer service, they were unable to provide a clear explanation of the fee structure.",
+    "damages": {
+      "amount_claimed": 3400,
+      "specials": 3400,
+      "breakdown": [
+        { "item": "Excess interest and fees charged", "amount": 3400 }
+      ]
+    },
+    "venue": "Texas",
+    "category": "Personal loan dispute",
+    "incident_date": "2023-03-10",
+    "demand_deadline_days": 30
+  },
+  {
+    "parties": {
+      "plaintiff": "Consumer",
+      "defendant": "MegaCorp Property Management"
+    },
+    "incident": "I rented an apartment from MegaCorp Property Management from January 2023 to December 2023. Upon moving out, I left the apartment in excellent condition, having professionally cleaned it and repaired all minor wear and tear. I provided proper 60-day notice as required by the lease. Despite this, MegaCorp has refused to return my security deposit of $2,500, citing bogus damages including 'carpet replacement' for carpets that were already 10 years old when I moved in. They also charged me $800 for 'repainting' when the lease clearly states normal wall wear is expected. I have photographs documenting the pristine condition of the apartment at move-out.",
+    "damages": {
+      "amount_claimed": 3300,
+      "specials": 2500,
+      "generals": 800,
+      "breakdown": [
+        { "item": "Security deposit wrongfully withheld", "amount": 2500 },
+        { "item": "Improper charges for normal wear", "amount": 800 }
+      ]
+    },
+    "venue": "New York",
+    "category": "Security deposit dispute",
+    "incident_date": "2023-12-31",
+    "demand_deadline_days": 14,
+    "exhibits": [
+      { "name": "Move-out photos", "description": "Timestamped photographs of apartment condition" },
+      { "name": "Lease agreement", "description": "Original lease with wear-and-tear provisions highlighted" },
+      { "name": "Cleaning receipt", "description": "Professional cleaning service receipt dated December 29, 2023" }
+    ]
+  }
+]
+

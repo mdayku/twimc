@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+CHANGED=$(git diff --cached --name-only)
+
+# 1) No emojis in code/markdown
+if echo "$CHANGED" | grep -E '\.(ts|tsx|js|py|go|rs|java|md)$' >/dev/null; then
+  if git diff --cached | perl -ne 'exit 1 if /\p{Extended_Pictographic}/'; then :; else
+    echo "Emoji detected in staged changes. Remove them."; exit 1; fi
+fi
+
+# 2) Compile/typecheck quick gate
+if echo "$CHANGED" | grep -E '\.(ts|tsx)$' >/dev/null && command -v tsc >/dev/null; then tsc --noEmit; fi
+if echo "$CHANGED" | grep -E '\.py$' >/dev/null && command -v python >/dev/null; then python -m pyflakes $(echo "$CHANGED" | grep -E '\.py$' || true); fi
+
+# 3) Nudge: show existing same-type files if adding a new one
+NEW=$(git diff --cached --name-status | awk '$1=="A"{print $2}')
+for f in $NEW; do ext="${f##*.}"; dir="$(dirname "$f")"; echo "New $f — existing *.$ext in $dir:"; ls "$dir"/*."$ext" 2>/dev/null || true; done

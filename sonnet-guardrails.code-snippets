@@ -1,0 +1,52 @@
+{
+  "Mode: ASK": {
+    "prefix": "m.ask",
+    "body": [
+      "MODE: ASK",
+      "Unknowns/assumptions:",
+      "- ",
+      "Acceptance after clarification:",
+      "- ",
+      ""
+    ]
+  },
+  "Mode: PLAN": {
+    "prefix": "m.plan",
+    "body": [
+      "MODE: PLAN",
+      "Steps:",
+      "1. ",
+      "Files to touch:",
+      "- ",
+      "Acceptance (executable):",
+      "- ",
+      ""
+    ]
+  },
+  "Mode: TEST": {
+    "prefix": "m.test",
+    "body": [
+      "MODE: TEST",
+      "Write/Run tests for:",
+      "- ",
+      "Commands:",
+      "```bash",
+      "just ship",
+      "```",
+      "Expected artifacts:",
+      "- coverage/junit paths",
+      ""
+    ]
+  },
+  "Mode: DOCS": {
+    "prefix": "m.docs",
+    "body": [
+      "MODE: DOCS",
+      "Docs to update (README/PRD/CHANGELOG):",
+      "- ",
+      "Diff summary:",
+      "- ",
+      ""
+    ]
+  }
+}

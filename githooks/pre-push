@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Schema guard (Prisma example; adapt for Alembic/Liquibase etc.)
+if git diff --name-only origin/HEAD..HEAD | grep -E 'prisma/schema.prisma|migrations/|db/.*\.sql' >/dev/null; then
+  echo "Schema changes detected → generate/validate migrations + smoke tests before pushing to main."
+  if command -v prisma >/dev/null; then pnpm prisma generate; fi
+fi
+
+# Ghost code sweep (warn-only)
+if command -v npx >/dev/null; then npx -y ts-unused-exports || true; fi
+if command -v vulture >/dev/null; then vulture . || true; fi

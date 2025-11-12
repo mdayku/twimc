@@ -1,0 +1,20 @@
+cadence:
+  require_nonbuild_every_n: 5
+
+modes: [ASK, PLAN, BUILD, TEST, DOCS]
+
+code_pitfalls:
+  ban_emojis_in_code: true
+  compile_before_run: true
+  create_new_file_policy: "scan-dir-first"
+  batch_uploads_only: true
+
+db_rules:
+  on_schema_change:
+    - "generate migration"
+    - "rebuild + redeploy DB"
+    - "run smoke tests"
+
+hygiene:
+  update_chat_todo_and_prd_each_prompt: true
+  ghost_variable_check_commits: 10
