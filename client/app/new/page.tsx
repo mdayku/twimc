@@ -90,6 +90,21 @@ export default function NewLetterPage() {
       })
 
       setFactsId(intakeResponse.facts_id)
+      
+      // Save to localStorage for history
+      const historyItem = {
+        facts_id: intakeResponse.facts_id,
+        plaintiff: data.plaintiff,
+        defendant: data.defendant,
+        created_at: new Date().toISOString(),
+        version_count: 0,
+      }
+      
+      const existingHistory = localStorage.getItem('steno_history')
+      const history = existingHistory ? JSON.parse(existingHistory) : []
+      history.unshift(historyItem) // Add to beginning
+      localStorage.setItem('steno_history', JSON.stringify(history))
+      
       toast.success('Facts submitted successfully!')
 
       // Auto-generate draft
