@@ -11,14 +11,16 @@ import { useDropzone } from 'react-dropzone'
 import { submitIntake, generateDraft } from '@/lib/api-service'
 import type { FactsJson } from '@/types/api'
 
-// Validation schema
+// Validation schema - most fields optional since they can be auto-filled from documents
+// Only attorney info is always required
 const factsSchema = z.object({
-  plaintiff: z.string().min(1, 'Plaintiff name is required'),
-  defendant: z.string().min(1, 'Defendant name is required'),
-  plaintiff_attorney: z.string().optional(),
-  incident: z.string().min(10, 'Incident description must be at least 10 characters'),
+  plaintiff: z.string().optional(),
+  defendant: z.string().optional(),
+  plaintiff_attorney: z.string().min(1, 'Your name is required'),
+  plaintiff_firm: z.string().min(1, 'Your firm name is required'),
+  incident: z.string().optional(),
   venue: z.string().optional(),
-  amount_claimed: z.number().min(0, 'Amount must be positive'),
+  amount_claimed: z.number().min(0, 'Amount must be positive').optional(),
   specials: z.number().optional(),
   generals: z.number().optional(),
 })
@@ -31,12 +33,21 @@ export default function NewLetterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors }, watch } = useForm<FormData>({
     resolver: zodResolver(factsSchema),
     defaultValues: {
       amount_claimed: 0,
+      plaintiff: '',
+      defendant: '',
+      incident: '',
+      venue: '',
+      plaintiff_attorney: '',
+      plaintiff_firm: '',
     },
   })
+
+  // Watch form values to check if auto-filled
+  const formValues = watch()
 
   // File upload with react-dropzone
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -200,14 +211,14 @@ export default function NewLetterPage() {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div>
               <label htmlFor="plaintiff" className="block text-sm font-medium text-gray-700 mb-2">
-                Plaintiff *
+                Plaintiff <span className="text-gray-400 text-xs">(auto-filled from document)</span>
               </label>
               <input
                 {...register('plaintiff')}
                 type="text"
                 id="plaintiff"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="John Doe"
+                placeholder="Will be extracted from uploaded document"
               />
               {errors.plaintiff && (
                 <p className="mt-1 text-sm text-red-600">{errors.plaintiff.message}</p>
@@ -216,14 +227,14 @@ export default function NewLetterPage() {
 
             <div>
               <label htmlFor="defendant" className="block text-sm font-medium text-gray-700 mb-2">
-                Defendant *
+                Defendant <span className="text-gray-400 text-xs">(auto-filled from document)</span>
               </label>
               <input
                 {...register('defendant')}
                 type="text"
                 id="defendant"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="ACME Corporation"
+                placeholder="Will be extracted from uploaded document"
               />
               {errors.defendant && (
                 <p className="mt-1 text-sm text-red-600">{errors.defendant.message}</p>
@@ -231,30 +242,52 @@ export default function NewLetterPage() {
             </div>
           </div>
 
-          <div>
-            <label htmlFor="plaintiff_attorney" className="block text-sm font-medium text-gray-700 mb-2">
-              Plaintiff Attorney (Optional)
-            </label>
-            <input
-              {...register('plaintiff_attorney')}
-              type="text"
-              id="plaintiff_attorney"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Jane Smith, Esq."
-            />
+          {/* Attorney Info - Always Required */}
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div>
+              <label htmlFor="plaintiff_attorney" className="block text-sm font-medium text-gray-700 mb-2">
+                Your Name *
+              </label>
+              <input
+                {...register('plaintiff_attorney')}
+                type="text"
+                id="plaintiff_attorney"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Jane Smith, Esq."
+              />
+              {errors.plaintiff_attorney && (
+                <p className="mt-1 text-sm text-red-600">{errors.plaintiff_attorney.message}</p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="plaintiff_firm" className="block text-sm font-medium text-gray-700 mb-2">
+                Your Firm *
+              </label>
+              <input
+                {...register('plaintiff_firm')}
+                type="text"
+                id="plaintiff_firm"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Smith & Associates LLP"
+              />
+              {errors.plaintiff_firm && (
+                <p className="mt-1 text-sm text-red-600">{errors.plaintiff_firm.message}</p>
+              )}
+            </div>
           </div>
 
           {/* Incident */}
           <div>
             <label htmlFor="incident" className="block text-sm font-medium text-gray-700 mb-2">
-              Incident Description *
+              Incident Description <span className="text-gray-400 text-xs">(auto-filled from document)</span>
             </label>
             <textarea
               {...register('incident')}
               id="incident"
               rows={4}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="On January 15, 2024, the defendant..."
+              placeholder="Will be extracted from uploaded document..."
             />
             {errors.incident && (
               <p className="mt-1 text-sm text-red-600">{errors.incident.message}</p>
@@ -264,7 +297,7 @@ export default function NewLetterPage() {
           {/* Venue */}
           <div>
             <label htmlFor="venue" className="block text-sm font-medium text-gray-700 mb-2">
-              Venue (Optional)
+              Venue <span className="text-gray-400 text-xs">(auto-filled from document)</span>
             </label>
             <input
               {...register('venue')}

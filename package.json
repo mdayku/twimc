@@ -16,10 +16,10 @@
     "lint": "npm run lint --workspace=client"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "docx": "^9.5.1"
   },
   "engines": {
     "node": ">=18.0.0"
   }
 }
-

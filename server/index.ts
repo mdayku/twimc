@@ -286,6 +286,42 @@ export function mergeExtractedTextWithFacts(
   // Try to intelligently merge specific fields if they appear to be missing
   const allText = extractedTexts.map(et => et.text).join('\n\n')
 
+  // Look for missing plaintiff name
+  if (!facts.parties?.plaintiff || facts.parties.plaintiff.trim() === '') {
+    const plaintiffPatterns = [
+      /plaintiff[:\s]+([A-Z][a-z]+ [A-Z][a-z]+)/i,
+      /claimant[:\s]+([A-Z][a-z]+ [A-Z][a-z]+)/i,
+      /injured party[:\s]+([A-Z][a-z]+ [A-Z][a-z]+)/i
+    ]
+
+    for (const pattern of plaintiffPatterns) {
+      const match = allText.match(pattern)
+      if (match && match[1].trim().length > 3) {
+        if (!mergedFacts.parties) mergedFacts.parties = {}
+        mergedFacts.parties.plaintiff = match[1].trim()
+        break
+      }
+    }
+  }
+
+  // Look for missing defendant name
+  if (!facts.parties?.defendant || facts.parties.defendant.trim() === '') {
+    const defendantPatterns = [
+      /defendant[:\s]+([A-Z][a-z]+(?: [A-Z][a-z]+)*(?:,? Inc\.?|,? LLC|,? Corp\.?|,? Services)?)/i,
+      /at fault[:\s]+([A-Z][a-z]+(?: [A-Z][a-z]+)*(?:,? Inc\.?|,? LLC|,? Corp\.?|,? Services)?)/i,
+      /responsible party[:\s]+([A-Z][a-z]+(?: [A-Z][a-z]+)*(?:,? Inc\.?|,? LLC|,? Corp\.?|,? Services)?)/i
+    ]
+
+    for (const pattern of defendantPatterns) {
+      const match = allText.match(pattern)
+      if (match && match[1].trim().length > 3) {
+        if (!mergedFacts.parties) mergedFacts.parties = {}
+        mergedFacts.parties.defendant = match[1].trim()
+        break
+      }
+    }
+  }
+
   // Look for missing incident description
   if (!facts.incident || facts.incident.trim() === '' || facts.incident.includes('[TODO')) {
     // Try to extract incident description from text
@@ -307,21 +343,39 @@ export function mergeExtractedTextWithFacts(
   // Look for missing damage amounts
   if (!facts.damages?.amount_claimed || facts.damages.amount_claimed === 0) {
     const amountPatterns = [
-      /\$([0-9,]+(?:\.[0-9]{2})?)/g,
-      /([0-9,]+(?:\.[0-9]{2})?) dollars?/i,
-      /amount[:\s]*\$?([0-9,]+(?:\.[0-9]{2})?)/i
+      /total[^$]*\$([0-9,]+(?:\.[0-9]{2})?)/i,
+      /damages[:\s]*\$([0-9,]+(?:\.[0-9]{2})?)/i,
+      /\$([0-9,]+(?:\.[0-9]{2})?)/g
     ]
 
     for (const pattern of amountPatterns) {
       const matches = allText.match(pattern)
       if (matches) {
-        // Take the first/largest amount found
-        const amounts = matches.map(m => parseFloat(m.replace(/[$,]/g, ''))).filter(a => a > 0)
+        // Take the largest amount found (likely the total)
+        const amounts = matches.map(m => parseFloat(m.replace(/[$,]/g, ''))).filter(a => a > 100) // Ignore small amounts
         if (amounts.length > 0) {
           mergedFacts.damages = mergedFacts.damages || {}
           mergedFacts.damages.amount_claimed = Math.max(...amounts)
           break
         }
+      }
+    }
+  }
+
+  // Look for missing venue
+  if (!facts.venue || facts.venue.trim() === '') {
+    const venuePatterns = [
+      /(?:location|venue|jurisdiction)[:\s]+([A-Z][a-z]+(?:,?\s+[A-Z]{2})?)/i,
+      /in ([A-Z][a-z]+,\s*[A-Z]{2})/,
+      /([A-Z][a-z]+,\s*California)/i,
+      /([A-Z][a-z]+,\s*CA)/
+    ]
+
+    for (const pattern of venuePatterns) {
+      const match = allText.match(pattern)
+      if (match && match[1].trim().length > 3) {
+        mergedFacts.venue = match[1].trim()
+        break
       }
     }
   }
