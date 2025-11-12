@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams, useSearchParams, useRouter } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import toast from 'react-hot-toast'
 import { Download, FileText, Loader2, RefreshCw, Share2, ExternalLink } from 'lucide-react'
@@ -13,7 +13,6 @@ import type { GenerateResponse, DraftSummary } from '@/types/api'
 export default function DraftPage() {
   const params = useParams()
   const searchParams = useSearchParams()
-  const router = useRouter()
   const factsId = params.factsId as string
   const initialVersion = searchParams.get('version')
 
@@ -45,9 +44,10 @@ export default function DraftPage() {
           const generateResponse = await generateDraft({ facts_id: factsId })
           setDraft(generateResponse)
         }
-      } catch (error: any) {
+      } catch (error) {
         console.error('Error loading draft:', error)
-        toast.error(error.response?.data?.error || 'Failed to load draft')
+        const err = error as { response?: { data?: { error?: string } } }
+        toast.error(err.response?.data?.error || 'Failed to load draft')
       } finally {
         setIsLoading(false)
       }
@@ -69,9 +69,10 @@ export default function DraftPage() {
       setVersions(draftsResponse.drafts)
       
       toast.success(`Generated version ${generateResponse.version}`)
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error regenerating:', error)
-      toast.error(error.response?.data?.error || 'Failed to regenerate draft')
+      const err = error as { response?: { data?: { error?: string } } }
+      toast.error(err.response?.data?.error || 'Failed to regenerate draft')
     } finally {
       setIsRegenerating(false)
     }
@@ -95,9 +96,10 @@ export default function DraftPage() {
       window.URL.revokeObjectURL(url)
       
       toast.success('DOCX exported successfully')
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error exporting:', error)
-      toast.error(error.response?.data?.error || 'Failed to export to DOCX')
+      const err = error as { response?: { data?: { error?: string } } }
+      toast.error(err.response?.data?.error || 'Failed to export to DOCX')
     } finally {
       setIsExporting(false)
     }
@@ -118,9 +120,10 @@ export default function DraftPage() {
       
       setGoogleDocUrl(result.documentUrl)
       toast.success('Exported to Google Docs!')
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error exporting to Google Docs:', error)
-      toast.error(error.message || 'Failed to export to Google Docs')
+      const err = error as { message?: string }
+      toast.error(err.message || 'Failed to export to Google Docs')
     } finally {
       setIsExporting(false)
     }

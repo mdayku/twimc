@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { FileText, Search, Calendar, Loader2 } from 'lucide-react'
 import { getDrafts } from '@/lib/api-service'
-import type { DraftsResponse } from '@/types/api'
 
 interface HistoryItem {
   facts_id: string
@@ -46,7 +45,7 @@ export default function HistoryPage() {
               ...item,
               version_count: draftsResponse.total_drafts,
             }
-          } catch (error) {
+          } catch {
             // If fetch fails, keep the item without version count
             return item
           }

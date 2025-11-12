@@ -44,9 +44,10 @@ export default function TemplatesPage() {
       setIsLoading(true)
       const response = await getTemplates()
       setTemplates(response.templates)
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error loading templates:', error)
-      toast.error(error.response?.data?.error || 'Failed to load templates')
+      const err = error as { response?: { data?: { error?: string } } }
+      toast.error(err.response?.data?.error || 'Failed to load templates')
     } finally {
       setIsLoading(false)
     }
@@ -66,9 +67,10 @@ export default function TemplatesPage() {
       setShowModal(false)
       reset()
       loadTemplates()
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error saving template:', error)
-      toast.error(error.response?.data?.error || 'Failed to save template')
+      const err = error as { response?: { data?: { error?: string } } }
+      toast.error(err.response?.data?.error || 'Failed to save template')
     } finally {
       setIsSaving(false)
     }

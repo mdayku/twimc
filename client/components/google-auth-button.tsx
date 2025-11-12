@@ -1,12 +1,11 @@
 'use client'
 
-import { useState } from 'react'
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google'
 import toast from 'react-hot-toast'
 
 interface GoogleAuthButtonProps {
   onSuccess: (accessToken: string) => void
-  onError?: (error: any) => void
+  onError?: (error: Error) => void
 }
 
 export function GoogleAuthProvider({ children }: { children: React.ReactNode }) {
@@ -26,7 +25,6 @@ export function GoogleAuthProvider({ children }: { children: React.ReactNode }) 
 }
 
 export default function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButtonProps) {
-  const [isLoading, setIsLoading] = useState(false)
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''
 
   if (!clientId || clientId === 'your-google-client-id-here') {
@@ -40,22 +38,23 @@ export default function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButto
     )
   }
 
-  const handleSuccess = async (credentialResponse: any) => {
+  const handleSuccess = async (credentialResponse: { credential?: string }) => {
     try {
-      setIsLoading(true)
-      
       // Exchange the credential for an access token
       // Note: In production, you'd want to do this server-side
+      const params = new URLSearchParams()
+      if (credentialResponse.credential) {
+        params.append('code', credentialResponse.credential)
+      }
+      params.append('client_id', clientId)
+      params.append('grant_type', 'authorization_code')
+      
       const response = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: new URLSearchParams({
-          code: credentialResponse.credential,
-          client_id: clientId,
-          grant_type: 'authorization_code',
-        }),
+        body: params,
       })
 
       if (!response.ok) {
@@ -65,12 +64,10 @@ export default function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButto
       const data = await response.json()
       onSuccess(data.access_token)
       toast.success('Connected to Google')
-    } catch (error: any) {
+    } catch (error) {
       console.error('Google auth error:', error)
       toast.error('Failed to authenticate with Google')
-      onError?.(error)
-    } finally {
-      setIsLoading(false)
+      onError?.(error as Error)
     }
   }
 
@@ -85,7 +82,6 @@ export default function GoogleAuthButton({ onSuccess, onError }: GoogleAuthButto
         onSuccess={handleSuccess}
         onError={handleError}
         useOneTap={false}
-        scope="https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/drive.file"
       />
     </div>
   )

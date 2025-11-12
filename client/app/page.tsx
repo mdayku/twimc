@@ -61,7 +61,7 @@ export default function Home() {
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Firm Templates</h3>
           <p className="text-gray-600">
-            Create and manage custom templates that match your firm's style and jurisdiction.
+            Create and manage custom templates that match your firm&apos;s style and jurisdiction.
           </p>
         </div>
       </div>

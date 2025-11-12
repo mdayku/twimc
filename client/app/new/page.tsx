@@ -30,7 +30,6 @@ export default function NewLetterPage() {
   const [files, setFiles] = useState<File[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
-  const [factsId, setFactsId] = useState<string | null>(null)
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(factsSchema),
@@ -89,8 +88,6 @@ export default function NewLetterPage() {
         attachments: files.length > 0 ? files : undefined,
       })
 
-      setFactsId(intakeResponse.facts_id)
-      
       // Save to localStorage for history
       const historyItem = {
         facts_id: intakeResponse.facts_id,
@@ -115,11 +112,12 @@ export default function NewLetterPage() {
 
       toast.success('Draft generated!')
       
-      // Navigate to draft page (we'll create this next)
+      // Navigate to draft page
       router.push(`/draft/${intakeResponse.facts_id}?version=${generateResponse.version}`)
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error:', error)
-      toast.error(error.response?.data?.error || 'Failed to submit facts')
+      const err = error as { response?: { data?: { error?: string } } }
+      toast.error(err.response?.data?.error || 'Failed to submit facts')
     } finally {
       setIsSubmitting(false)
       setIsGenerating(false)

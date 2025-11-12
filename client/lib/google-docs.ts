@@ -10,9 +10,9 @@ export interface GoogleDocsExportResult {
  * Convert markdown to Google Docs format
  * This is a simplified converter - you may want to enhance it for complex markdown
  */
-export function markdownToGoogleDocsRequests(markdown: string, title: string) {
+export function markdownToGoogleDocsRequests(markdown: string) {
   const lines = markdown.split('\n')
-  const requests: any[] = []
+  const requests: Array<Record<string, unknown>> = []
   let currentIndex = 1 // Start after title
 
   lines.forEach((line) => {
@@ -149,7 +149,7 @@ export async function exportToGoogleDocs(
     const documentId = doc.documentId
 
     // Step 2: Convert markdown to Google Docs format and insert content
-    const requests = markdownToGoogleDocsRequests(draftMarkdown, title)
+    const requests = markdownToGoogleDocsRequests(draftMarkdown)
 
     const batchUpdateResponse = await fetch(
       `https://docs.googleapis.com/v1/documents/${documentId}:batchUpdate`,
