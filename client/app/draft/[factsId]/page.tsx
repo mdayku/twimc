@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import toast from 'react-hot-toast'
-import { Download, FileText, Loader2, RefreshCw, Share2 } from 'lucide-react'
+import { Download, FileText, Loader2, RefreshCw, Share2, ExternalLink } from 'lucide-react'
 import { generateDraft, exportToDocx, getDrafts } from '@/lib/api-service'
+import { exportToGoogleDocs } from '@/lib/google-docs'
+import { GoogleAuthProvider } from '@/components/google-auth-button'
 import type { GenerateResponse, DraftSummary } from '@/types/api'
 
 export default function DraftPage() {
@@ -20,6 +22,8 @@ export default function DraftPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isRegenerating, setIsRegenerating] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
+  const [googleAccessToken, setGoogleAccessToken] = useState<string | null>(null)
+  const [googleDocUrl, setGoogleDocUrl] = useState<string | null>(null)
 
   // Load draft and version history
   useEffect(() => {
@@ -99,9 +103,27 @@ export default function DraftPage() {
     }
   }
 
-  const handleExportGoogleDocs = () => {
-    // TODO: Implement Google Docs export (Task 9)
-    toast.error('Google Docs export coming soon!')
+  const handleExportGoogleDocs = async () => {
+    if (!draft) return
+    if (!googleAccessToken) {
+      toast.error('Please sign in with Google first')
+      return
+    }
+
+    try {
+      setIsExporting(true)
+      const title = `Demand Letter - ${factsId} v${draft.version}`
+      
+      const result = await exportToGoogleDocs(googleAccessToken, draft.draft_md, title)
+      
+      setGoogleDocUrl(result.documentUrl)
+      toast.success('Exported to Google Docs!')
+    } catch (error: any) {
+      console.error('Error exporting to Google Docs:', error)
+      toast.error(error.message || 'Failed to export to Google Docs')
+    } finally {
+      setIsExporting(false)
+    }
   }
 
   if (isLoading) {
@@ -127,9 +149,10 @@ export default function DraftPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+    <GoogleAuthProvider>
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Demand Letter Draft</h1>
           <p className="mt-1 text-sm text-gray-600">
@@ -167,31 +190,100 @@ export default function DraftPage() {
           </div>
 
           {/* Export Actions */}
-          <div className="mt-6 flex items-center space-x-4">
-            <button
-              onClick={handleExportGoogleDocs}
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-            >
-              <Share2 className="w-5 h-5 mr-2" />
-              Export to Google Docs
-            </button>
-            <button
-              onClick={handleExportDocx}
-              disabled={isExporting}
-              className="inline-flex items-center px-6 py-3 border border-gray-300 rounded-md text-base font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-            >
-              {isExporting ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Exporting...
-                </>
+          <div className="mt-6 space-y-4">
+            {/* Google Docs Export */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-blue-900 mb-3">Export to Google Docs</h3>
+              <p className="text-sm text-blue-700 mb-4">
+                Export to Google Docs for real-time collaboration, comments, and change tracking.
+              </p>
+              
+              {!googleAccessToken ? (
+                <div>
+                  <p className="text-sm text-blue-700 mb-3">Sign in with Google to export:</p>
+                  <button
+                    onClick={() => {
+                      // Trigger Google OAuth flow
+                      // For demo, we'll use a simple prompt
+                      const token = prompt('For demo: Enter a mock Google access token (or press OK to simulate)')
+                      if (token !== null) {
+                        setGoogleAccessToken(token || 'mock-token-for-demo')
+                        toast.success('Connected to Google (Demo Mode)')
+                      }
+                    }}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                  >
+                    Sign in with Google
+                  </button>
+                </div>
+              ) : googleDocUrl ? (
+                <div className="space-y-3">
+                  <div className="flex items-center text-green-700">
+                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span className="font-medium">Exported successfully!</span>
+                  </div>
+                  <a
+                    href={googleDocUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Open in Google Docs
+                  </a>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(googleDocUrl)
+                      toast.success('Link copied to clipboard')
+                    }}
+                    className="ml-3 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                  >
+                    Copy Link
+                  </button>
+                </div>
               ) : (
-                <>
-                  <Download className="w-5 h-5 mr-2" />
-                  Export to DOCX
-                </>
+                <button
+                  onClick={handleExportGoogleDocs}
+                  disabled={isExporting}
+                  className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {isExporting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Exporting...
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="w-5 h-5 mr-2" />
+                      Export to Google Docs
+                    </>
+                  )}
+                </button>
               )}
-            </button>
+            </div>
+
+            {/* DOCX Export (Fallback) */}
+            <div>
+              <button
+                onClick={handleExportDocx}
+                disabled={isExporting}
+                className="inline-flex items-center px-6 py-3 border border-gray-300 rounded-md text-base font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+              >
+                {isExporting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-5 h-5 mr-2" />
+                    Export to DOCX (Fallback)
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -292,6 +384,7 @@ export default function DraftPage() {
         </div>
       </div>
     </div>
+    </GoogleAuthProvider>
   )
 }
 
