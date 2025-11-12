@@ -1,7 +1,7 @@
 {
   "name": "twimc",
   "version": "1.0.0",
-  "description": "Steno Demand Letter Generator - AI-powered demand letter drafting tool",
+  "description": "TWIMC (To Whom It May Concern) - AI-powered demand letter generator by Steno",
   "private": true,
   "workspaces": [
     "client",

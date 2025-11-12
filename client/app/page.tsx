@@ -7,10 +7,13 @@ export default function Home() {
       {/* Hero Section */}
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl">
-          AI-Powered Demand Letter Generator
+          TWIMC
         </h1>
+        <p className="text-lg text-gray-500 mb-2">
+          To Whom It May Concern
+        </p>
         <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-          Generate professional demand letters in seconds. Upload documents, fill in facts, and export to Google Docs for collaboration.
+          AI-powered demand letter generator by <span className="font-semibold text-blue-600">Steno</span>. Generate professional letters in seconds.
         </p>
         <div className="pt-4">
           <Link

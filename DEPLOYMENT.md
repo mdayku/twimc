@@ -1,4 +1,7 @@
-# 🚀 Deployment Guide
+# 🚀 Deployment Guide - TWIMC
+
+**Product:** TWIMC (To Whom It May Concern)  
+**Company:** Steno
 
 ## ✅ Pre-Deployment Status
 
@@ -112,7 +115,7 @@ The project is configured as a monorepo with both frontend and backend deploying
 
 2. **Create a new project**:
    - Click "Select a project" → "New Project"
-   - Name: "Steno Demand Letter Generator"
+   - Name: "TWIMC - Steno"
    - Click "Create"
 
 3. **Enable required APIs**:
@@ -124,7 +127,7 @@ The project is configured as a monorepo with both frontend and backend deploying
 4. **Configure OAuth consent screen**:
    - Go to "APIs & Services" → "OAuth consent screen"
    - User Type: **External**
-   - App name: **Steno Demand Letter Generator**
+   - App name: **TWIMC by Steno**
    - User support email: Your email
    - Developer contact: Your email
    - Scopes: Add the following scopes:
@@ -136,7 +139,7 @@ The project is configured as a monorepo with both frontend and backend deploying
    - Go to "APIs & Services" → "Credentials"
    - Click "Create Credentials" → "OAuth client ID"
    - Application type: **Web application**
-   - Name: **Steno Web Client**
+   - Name: **TWIMC Web Client**
    - Authorized JavaScript origins:
      - `https://your-vercel-url.vercel.app` (your deployed Vercel URL)
      - `http://localhost:3000` (for local development)

@@ -1,4 +1,8 @@
-# Product Requirements Document (PRD) - Steno Demand Letter Generator
+# Product Requirements Document (PRD) - TWIMC (To Whom It May Concern)
+
+**Product:** TWIMC - AI-Powered Demand Letter Generator  
+**Company:** Steno  
+**Project ID:** 8mKWMdtQ1jdYzU0cVQPV_1762206474285
 
 ## Top Priorities
 
@@ -56,7 +60,7 @@
 
 ## Overview
 
-Steno is an AI-powered legal document generator that helps attorneys and paralegals create professional demand letters quickly and accurately. The system ingests case facts and generates structured legal documents using either OpenAI GPT models or AWS Bedrock (Claude Sonnet), with export to Word format for final editing.
+**TWIMC (To Whom It May Concern)** is an AI-powered demand letter generator by **Steno** that helps attorneys and paralegals create professional demand letters quickly and accurately. The system ingests case facts and generates structured legal documents using either OpenAI GPT models or AWS Bedrock (Claude Sonnet), with export to Word format for final editing.
 
 ### Core Flow
 1. **Intake**: Attorney/paralegal provides case facts (parties, incident, damages, venue)

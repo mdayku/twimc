@@ -1,6 +1,6 @@
-# Steno Demand Letter Generator
+# TWIMC (To Whom It May Concern)
 
-AI-powered demand letter drafting tool for law firms. Generate professional demand letters in seconds using GPT-4o, with support for custom templates, document uploads, and Google Docs export.
+AI-powered demand letter generator by **Steno**. Generate professional demand letters in seconds using GPT-4o, with support for custom templates, document uploads, and Google Docs export.
 
 ## 🚀 Features
 
@@ -190,12 +190,12 @@ twimc/
 
 ## 📝 License
 
-Proprietary - Steno
+Proprietary - **Steno**
 
 ## 🤝 Contributing
 
-This is a private project for Steno. Contact the team for access.
+This is a project by **Steno**. For access or collaboration inquiries, contact the Steno team.
 
 ## 📧 Support
 
-For questions or issues, contact the Steno development team.
+For questions or issues, contact the **Steno** development team.
