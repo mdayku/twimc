@@ -10,8 +10,11 @@ export async function markdownToDocxBuffer(
   md: string,
   letterhead?: string
 ): Promise<Buffer> {
+  // Ensure md is a string
+  const mdString = typeof md === 'string' ? md : String(md || '')
+  
   // Parse markdown to HTML
-  const html = await marked(md || '')
+  const html = await marked(mdString)
   const { window } = new JSDOM(html)
   const doc = window.document
 
