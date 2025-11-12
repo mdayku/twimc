@@ -1,79 +1,109 @@
-INCIDENT REPORT - VEHICLE COLLISION
+TRAFFIC COLLISION REPORT
 
 Date of Incident: January 15, 2024
-Location: 123 Main Street, intersection with Oak Avenue, Los Angeles, CA
+Time: 2:30 PM
+Location: 123 Main Street at Oak Avenue, Los Angeles, CA 90012
 
 Parties Involved:
-- Plaintiff: Sarah Johnson
-- Defendant: ABC Delivery Services, Inc.
-- Defendant Driver: Michael Thompson
 
-Incident Description:
-On January 15, 2024, at approximately 2:30 PM, Sarah Johnson was driving southbound on Main Street in Los Angeles, California. While proceeding through the intersection of Main Street and Oak Avenue with a green light, her vehicle was struck on the driver's side by a delivery truck operated by Michael Thompson, an employee of ABC Delivery Services, Inc. The defendant's vehicle ran a red light at high speed and collided with the plaintiff's vehicle, causing significant damage and injuries.
+Party 1 (Victim):
+- Name: Sarah Johnson
+- DOB: 03/15/1985
+- Address: 456 Elm Street, Los Angeles, CA 90015
+- Phone: (555) 234-5678
+- Vehicle: 2020 Honda Accord, CA License Plate: 7ABC123
+
+Party 2 (At-Fault Driver):
+- Name: Michael Thompson
+- DOB: 08/22/1978
+- Address: 789 Commerce Blvd, Los Angeles, CA 90001
+- Phone: (555) 876-5432
+- Vehicle: 2019 Ford Transit Van, CA License Plate: COM4567
+- Employer: ABC Delivery Services, Inc.
+- Commercial Driver License: CDL-CA-987654
+
+Narrative:
+At approximately 14:30 hours, I responded to a traffic collision at the intersection of Main Street and Oak Avenue. Upon arrival, I observed a 2020 Honda Accord with significant damage to the driver's side and a 2019 Ford Transit delivery van with front-end damage.
+
+Driver 1 (Sarah Johnson) stated she was traveling southbound on Main Street with a green traffic signal. As she entered the intersection, Driver 2's vehicle struck her vehicle on the driver's side.
+
+Driver 2 (Michael Thompson) stated he was traveling eastbound on Oak Avenue when the collision occurred. Driver 2 admitted he "didn't see the red light" and failed to stop at the intersection.
+
+Two witnesses at the scene corroborated Driver 1's account. Traffic camera footage was obtained showing Driver 2 entering the intersection against a red signal.
+
+Driver 2 was cited for violation of CVC 21453(a) - Failure to Stop at Red Signal.
 
 Witnesses:
-- Jennifer Martinez (pedestrian) - (555) 123-4567
-- Robert Chen (nearby store owner) - (555) 987-6543
+- Jennifer Martinez, 234 Oak Avenue, Los Angeles, CA - (555) 123-4567
+- Robert Chen, 240 Oak Avenue (Chen's Market), Los Angeles, CA - (555) 987-6543
 
-Police Report:
-LAPD Case #2024-001234
-Officer: Badge #5678, Officer David Williams
-Citation issued to defendant driver for running red light
+Citations Issued:
+- CVC 21453(a) - Failure to Stop at Red Signal - Driver 2 (Michael Thompson)
 
-Injuries Sustained:
-- Whiplash and neck strain
-- Lower back injuries
-- Concussion
-- Bruising and lacerations
-- Emotional distress and anxiety
+Report Information:
+- LAPD Case Number: 2024-001234
+- Reporting Officer: David Williams, Badge #5678
+- Division: Central Traffic
+- Report Date: January 15, 2024
 
-Medical Treatment:
-- Emergency room visit at Cedars-Sinai Medical Center on 1/15/2024
-- Follow-up appointments with Dr. Emily Rodriguez, orthopedic specialist
-- Physical therapy sessions (ongoing)
-- Psychological counseling for trauma
+Injuries Reported:
+Party 1 (Sarah Johnson):
+- Complained of neck pain
+- Complained of lower back pain
+- Complained of headache
+- Visible bruising on left shoulder
+- Transported to Cedars-Sinai Medical Center by LAFD Rescue 27
 
-Damages:
-Property Damage:
-- Vehicle repair costs: $12,500
-- Vehicle rental during repairs: $1,200
-- Personal property damage (laptop, phone): $1,800
+Party 2 (Michael Thompson):
+- No injuries reported
+- Declined medical treatment
 
-Medical Expenses:
-- Emergency room: $8,500
-- Specialist consultations: $3,200
-- Physical therapy: $4,500
-- Medications: $850
-- Psychological counseling: $2,400
+Vehicle Damage Assessment:
+Party 1 Vehicle (2020 Honda Accord):
+- Major damage to driver's side door and quarter panel
+- Deployed airbags (side and curtain)
+- Vehicle towed from scene - not drivable
+- Estimated damage: $12,000-15,000
 
-Lost Wages:
-- 6 weeks missed work: $9,600
-
-Pain and Suffering:
-- Ongoing pain and reduced quality of life
-- Inability to participate in recreational activities
-- Sleep disturbances and anxiety
-
-Total Documented Damages: $44,550
+Party 2 Vehicle (2019 Ford Transit):
+- Moderate damage to front bumper and grille
+- Headlight assembly damaged
+- Vehicle driven from scene
+- Estimated damage: $3,000-5,000
 
 Additional Notes:
-The defendant driver admitted fault at the scene, stating "I'm so sorry, I didn't see the red light." This admission was documented in the police report. Traffic camera footage from the intersection confirms the defendant ran the red light.
+Driver 2 made spontaneous statement: "I'm so sorry, I didn't see the red light."
 
-The plaintiff has been unable to return to her normal activities, including her weekly tennis games and volunteer work at the local community center. She continues to experience pain and requires ongoing medical treatment.
+Traffic camera footage obtained from LADOT showing intersection at time of collision.
+
+Weather conditions: Clear, dry pavement
+Road conditions: Good
+Lighting: Daylight
+
+Driver 2 showed no signs of impairment. Field sobriety tests not administered.
 
 Insurance Information:
-Defendant's Insurance: SafeGuard Commercial Insurance
-Policy Number: SC-789456123
-Claim Number: 2024-CLM-98765
 
-Contact Information:
-Plaintiff: Sarah Johnson
-Phone: (555) 234-5678
-Email: sarah.johnson@email.com
+Party 1 (Sarah Johnson):
+- Insurance Company: State Farm Insurance
+- Policy Number: SF-123456789
 
-Defendant Company: ABC Delivery Services, Inc.
-Address: 456 Commerce Blvd, Los Angeles, CA 90001
-Phone: (555) 876-5432
+Party 2 (Michael Thompson / ABC Delivery Services):
+- Insurance Company: SafeGuard Commercial Insurance
+- Policy Number: SC-789456123
+- Commercial Policy - Employer: ABC Delivery Services, Inc.
+- Company Address: 789 Commerce Blvd, Los Angeles, CA 90001
+- Company Phone: (555) 876-5432
 
-This report is submitted for the purpose of pursuing a claim for damages resulting from the incident described above.
+Diagram:
+[Intersection diagram would be here showing vehicle positions and direction of travel]
+
+Officer's Conclusion:
+Based on physical evidence, witness statements, Driver 2's admission, and traffic camera footage, Driver 2 (Michael Thompson) violated CVC 21453(a) by failing to stop at a red traffic signal, resulting in the collision with Driver 1's vehicle.
+
+Primary Collision Factor: Unsafe Speed / Traffic Signals and Signs
+Driver 2 determined to be at fault.
+
+Report Filed: January 15, 2024, 15:45 hours
+Officer Signature: Officer David Williams, Badge #5678
 

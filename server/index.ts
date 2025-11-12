@@ -289,6 +289,9 @@ export function mergeExtractedTextWithFacts(
   // Look for missing plaintiff name
   if (!facts.parties?.plaintiff || facts.parties.plaintiff.trim() === '') {
     const plaintiffPatterns = [
+      /Party 1[^:]*:[^:]*Name[:\s]+([A-Z][a-z]+ [A-Z][a-z]+)/i,
+      /Victim[^:]*:[^:]*Name[:\s]+([A-Z][a-z]+ [A-Z][a-z]+)/i,
+      /Driver 1[^:]*:[^:]*([A-Z][a-z]+ [A-Z][a-z]+)/i,
       /plaintiff[:\s]+([A-Z][a-z]+ [A-Z][a-z]+)/i,
       /claimant[:\s]+([A-Z][a-z]+ [A-Z][a-z]+)/i,
       /injured party[:\s]+([A-Z][a-z]+ [A-Z][a-z]+)/i
@@ -307,6 +310,9 @@ export function mergeExtractedTextWithFacts(
   // Look for missing defendant name
   if (!facts.parties?.defendant || facts.parties.defendant.trim() === '') {
     const defendantPatterns = [
+      /Employer[:\s]+([A-Z][a-z]+(?: [A-Z][a-z]+)*(?:,? Inc\.?|,? LLC|,? Corp\.?|,? Services)?)/i,
+      /Party 2[^:]*:[^:]*Employer[:\s]+([A-Z][a-z]+(?: [A-Z][a-z]+)*(?:,? Inc\.?|,? LLC|,? Corp\.?|,? Services)?)/i,
+      /At-Fault[^:]*:[^:]*Employer[:\s]+([A-Z][a-z]+(?: [A-Z][a-z]+)*(?:,? Inc\.?|,? LLC|,? Corp\.?|,? Services)?)/i,
       /defendant[:\s]+([A-Z][a-z]+(?: [A-Z][a-z]+)*(?:,? Inc\.?|,? LLC|,? Corp\.?|,? Services)?)/i,
       /at fault[:\s]+([A-Z][a-z]+(?: [A-Z][a-z]+)*(?:,? Inc\.?|,? LLC|,? Corp\.?|,? Services)?)/i,
       /responsible party[:\s]+([A-Z][a-z]+(?: [A-Z][a-z]+)*(?:,? Inc\.?|,? LLC|,? Corp\.?|,? Services)?)/i
@@ -324,16 +330,18 @@ export function mergeExtractedTextWithFacts(
 
   // Look for missing incident description
   if (!facts.incident || facts.incident.trim() === '' || facts.incident.includes('[TODO')) {
-    // Try to extract incident description from text
+    // Try to extract incident description from text (narrative or conclusion)
     const incidentPatterns = [
+      /Narrative[:\s]*([^.]+\.[^.]+\.[^.]+\.)/i, // Get first 3 sentences of narrative
+      /Officer's Conclusion[:\s]*([^.]+\.)/i,
       /incident[:\s]*([^.]*\.)/i,
-      /accident[:\s]*([^.]*\.)/i,
-      /occurred[:\s]*([^.]*\.)/i
+      /collision[:\s]*([^.]*\.)/i,
+      /accident[:\s]*([^.]*\.)/i
     ]
 
     for (const pattern of incidentPatterns) {
       const match = allText.match(pattern)
-      if (match && match[1].trim().length > 10) {
+      if (match && match[1].trim().length > 20) {
         mergedFacts.incident = match[1].trim().replace(/\.$/, '')
         break
       }

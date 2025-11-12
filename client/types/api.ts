@@ -1,12 +1,13 @@
 // Facts and Intake types
 export interface Parties {
-  plaintiff: string
-  defendant: string
+  plaintiff?: string
+  defendant?: string
   plaintiff_attorney?: string
+  plaintiff_firm?: string
 }
 
 export interface Damages {
-  amount_claimed: number
+  amount_claimed?: number
   specials?: number
   generals?: number
   breakdown?: Array<{
@@ -16,9 +17,9 @@ export interface Damages {
 }
 
 export interface FactsJson {
-  parties: Parties
-  incident: string
-  damages: Damages
+  parties?: Parties
+  incident?: string
+  damages?: Damages
   venue?: string
   category?: string
   incident_date?: string

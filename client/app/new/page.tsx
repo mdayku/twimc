@@ -80,17 +80,18 @@ export default function NewLetterPage() {
       // Prepare facts JSON
       const factsJson: FactsJson = {
         parties: {
-          plaintiff: data.plaintiff,
-          defendant: data.defendant,
-          plaintiff_attorney: data.plaintiff_attorney,
+          plaintiff: data.plaintiff || undefined,
+          defendant: data.defendant || undefined,
+          plaintiff_attorney: data.plaintiff_attorney || undefined,
+          plaintiff_firm: data.plaintiff_firm || undefined,
         },
-        incident: data.incident,
+        incident: data.incident || undefined,
         damages: {
-          amount_claimed: data.amount_claimed,
-          specials: data.specials,
-          generals: data.generals,
+          amount_claimed: data.amount_claimed || undefined,
+          specials: data.specials || undefined,
+          generals: data.generals || undefined,
         },
-        venue: data.venue,
+        venue: data.venue || undefined,
       }
 
       // Submit intake
