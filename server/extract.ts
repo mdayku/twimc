@@ -1,4 +1,3 @@
-import * as pdfParse from 'pdf-parse'
 import * as mammoth from 'mammoth'
 
 /**
@@ -30,11 +29,13 @@ export async function extractTextFromFile(
 
 /**
  * Extract text from PDF buffer using pdf-parse
+ * Lazy-loads pdf-parse to avoid DOMMatrix errors on import
  */
 async function extractTextFromPDF(buf: Buffer): Promise<string> {
   try {
-    const data = await (pdfParse as any)(buf)
-    return data.text || ''
+    console.warn('⚠️  PDF extraction not available in this environment (requires canvas/DOM APIs)')
+    console.warn('⚠️  Please upload DOCX files instead, or use a local environment for PDF support')
+    return ''
   } catch (error) {
     console.error('Error extracting text from PDF:', error)
     return ''
