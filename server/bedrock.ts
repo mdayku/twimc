@@ -3,6 +3,7 @@ import {
   BedrockRuntimeClient,
   InvokeModelCommand,
 } from '@aws-sdk/client-bedrock-runtime'
+import { estimateTokens, recordBedrockTokens } from './metrics.js'
 
 const client = new BedrockRuntimeClient({
   region: process.env.BEDROCK_REGION || 'us-east-1',
@@ -132,6 +133,12 @@ export async function generateWithBedrock(
 
     // Extract the generated text from Claude's response
     const draftMd = responseBody.content?.[0]?.text || ''
+
+    // Metrics: crude token estimates (Bedrock does not always return usage)
+    const inputText = `${SYSTEM_PROMPT}\n\n${JSON.stringify(payload.messages)}`
+    const inputTokens = estimateTokens(inputText)
+    const outputTokens = estimateTokens(draftMd)
+    recordBedrockTokens(inputTokens, outputTokens)
 
     // Simple issue detection: check for TODO markers
     const issues: string[] = []

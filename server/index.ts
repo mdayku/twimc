@@ -5,6 +5,7 @@ import { markdownToDocxBuffer } from './docx.js'
 import multipart from '@fastify/multipart'
 import type { MultipartFile } from '@fastify/multipart'
 import { randomUUID } from 'crypto'
+import { recordRequestDuration } from './metrics.js'
 
 dotenv.config({ path: '../.env' })
 
@@ -55,6 +56,7 @@ app.addHook('onResponse', async (req, rep) => {
     const start = (req as any).startHrTime as bigint | undefined
     const cid = (req as any).correlationId as string | undefined
     const durationMs = start ? Number((process.hrtime.bigint() - start) / 1000000n) : undefined
+    recordRequestDuration(`${req.method} ${req.url}`, durationMs)
     req.log.info({
       cid,
       method: req.method,

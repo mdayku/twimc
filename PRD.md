@@ -15,6 +15,7 @@
 - Added Bearer auth for /v1/* and multipart attachments + timestamps for intake
 - Implemented correlation ID logging (x-request-id) with duration in server logs
 - Added Bedrock retry with exponential backoff and prompt-level guardrails
+- Added in-process metrics: per-route request duration (avg) and Bedrock token usage (estimated)
 
 ## Overview
 
