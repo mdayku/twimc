@@ -24,6 +24,40 @@ await app.register(multipart, {
   }
 })
 
+// Initialize templates (load from filesystem for MVP)
+async function initializeTemplates() {
+  try {
+    const fs = await import('fs/promises')
+    const path = await import('path')
+
+    // Load generic demand template
+    const genericTemplatePath = path.join(process.cwd(), '..', 'data', 'templates', 'generic_demand.md')
+    const genericContent = await fs.readFile(genericTemplatePath, 'utf-8')
+
+    const now = new Date().toISOString()
+    const genericTemplate: TemplateRecord = {
+      id: 'generic-demand',
+      name: 'Generic Demand Letter',
+      description: 'Standard demand letter template with sections for introduction, facts, liability, damages, and demand',
+      content: genericContent,
+      jurisdiction: 'General',
+      firm_style: {
+        tone: 'professional and firm'
+      },
+      created_at: now,
+      updated_at: now
+    }
+
+    templatesStore.set(genericTemplate.id, genericTemplate)
+    console.log('✅ Loaded generic demand template')
+  } catch (error) {
+    console.warn('⚠️  Could not load generic template:', error instanceof Error ? error.message : String(error))
+  }
+}
+
+// Initialize templates on startup
+await initializeTemplates()
+
 // Simple Bearer token auth for all /v1/* endpoints (MVP)
 const API_TOKENS = (process.env.API_TOKENS || process.env.API_TOKEN || '')
   .split(',')
@@ -87,8 +121,22 @@ interface DraftRecord {
   input_hash?: string  // hash of inputs for change detection
 }
 
+interface TemplateRecord {
+  id: string
+  name: string
+  description: string
+  content: string
+  jurisdiction?: string
+  firm_style?: any
+  created_at: string
+  updated_at: string
+}
+
 const factsStore = new Map<string, FactsRecord>()
 let factsIdCounter = 1
+
+// Template store (in-memory for MVP)
+const templatesStore = new Map<string, TemplateRecord>()
 
 // Utility function to generate change log between drafts
 function generateChangeLog(oldDraft: string, newDraft: string): string[] {
@@ -225,7 +273,7 @@ app.post('/v1/intake', async (req, rep) => {
 
 // Generate endpoint - produce draft from facts (with versioning)
 app.post('/v1/generate', async (req, rep) => {
-  const { facts_id, facts_json, template_md, firm_style, version } = (req.body as any) || {}
+  const { facts_id, facts_json, template_md, firm_style, version, template_id } = (req.body as any) || {}
 
   let factsRecord: FactsRecord | undefined
   let facts = facts_json
@@ -243,11 +291,26 @@ app.post('/v1/generate', async (req, rep) => {
     return rep.code(400).send({ error: 'Either facts_id or facts_json is required' })
   }
 
+  // Handle template selection
+  let effectiveTemplateMd = template_md
+  let effectiveFirmStyle = firm_style
+
+  if (template_id && !template_md) {
+    const template = templatesStore.get(template_id)
+    if (template) {
+      effectiveTemplateMd = template.content
+      effectiveFirmStyle = template.firm_style || firm_style
+      app.log.info({ template_id, template_name: template.name }, 'Using template for generation')
+    } else {
+      return rep.code(404).send({ error: 'Template not found', template_id })
+    }
+  }
+
   try {
-    const { draft_md, issues } = await generateWithBedrock(facts, template_md, firm_style)
+    const { draft_md, issues } = await generateWithBedrock(facts, effectiveTemplateMd, effectiveFirmStyle)
 
     // Create new draft version
-    const inputHash = generateInputHash(facts, template_md, firm_style)
+    const inputHash = generateInputHash(facts, effectiveTemplateMd, effectiveFirmStyle)
     const newVersion = (factsRecord?.drafts.length || 0) + 1
     const generatedAt = new Date().toISOString()
 
@@ -328,6 +391,63 @@ app.get('/v1/drafts/:facts_id', async (req, rep) => {
     facts_id,
     total_drafts: drafts.length,
     drafts
+  }
+})
+
+// Template management endpoints
+app.get('/v1/templates', async (req, rep) => {
+  const templates = Array.from(templatesStore.values()).map(template => ({
+    id: template.id,
+    name: template.name,
+    description: template.description,
+    jurisdiction: template.jurisdiction,
+    firm_style: template.firm_style,
+    created_at: template.created_at,
+    updated_at: template.updated_at
+  }))
+
+  return { templates, total: templates.length }
+})
+
+app.post('/v1/templates', async (req, rep) => {
+  const { id, name, description, content, jurisdiction, firm_style } = (req.body as any) || {}
+
+  if (!id || !name || !content) {
+    return rep.code(400).send({
+      error: 'Missing required fields',
+      details: 'id, name, and content are required'
+    })
+  }
+
+  const now = new Date().toISOString()
+  const existing = templatesStore.get(id)
+
+  const template: TemplateRecord = {
+    id,
+    name,
+    description: description || '',
+    content,
+    jurisdiction,
+    firm_style,
+    created_at: existing?.created_at || now,
+    updated_at: now
+  }
+
+  templatesStore.set(id, template)
+
+  app.log.info({ template_id: id, action: existing ? 'updated' : 'created' }, 'Template saved')
+
+  return {
+    template: {
+      id: template.id,
+      name: template.name,
+      description: template.description,
+      jurisdiction: template.jurisdiction,
+      firm_style: template.firm_style,
+      created_at: template.created_at,
+      updated_at: template.updated_at
+    },
+    action: existing ? 'updated' : 'created'
   }
 })
 

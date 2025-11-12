@@ -9,7 +9,7 @@
 5) Add basic metrics: request duration + Bedrock token usage
 6) Meet performance target p95 < 5s (add simple benchmark harness)
 7) Implement draft versioning (v1/v2) with change log
-8) Add template management API: GET/POST /v1/templates
+8) ✅ Add template management API: GET/POST /v1/templates
 
 ### Recent Changes
 - Added Bearer auth for /v1/* and multipart attachments + timestamps for intake
@@ -17,6 +17,7 @@
 - Added Bedrock retry with exponential backoff and prompt-level guardrails
 - Added in-process metrics: per-route request duration (avg) and Bedrock token usage (estimated)
 - Implemented draft versioning (v1/v2) with automatic change logs and version history API
+- Added template management API (GET/POST /v1/templates) with filesystem-backed storage
 
 ## Overview
 
@@ -234,6 +235,76 @@ GET /v1/drafts/:facts_id
       "change_log": ["Modified section: Damages", "Resolved 1 TODO placeholder"]
     }
   ]
+}
+```
+
+#### List Templates
+```http
+GET /v1/templates
+```
+
+**Purpose**: List all available demand letter templates
+
+**Response**: 200 OK
+```json
+{
+  "templates": [
+    {
+      "id": "generic-demand",
+      "name": "Generic Demand Letter",
+      "description": "Standard demand letter template with sections for introduction, facts, liability, damages, and demand",
+      "jurisdiction": "General",
+      "firm_style": {
+        "tone": "professional and firm"
+      },
+      "created_at": "2024-11-12T17:45:00.000Z",
+      "updated_at": "2024-11-12T17:45:00.000Z"
+    }
+  ],
+  "total": 1
+}
+```
+
+#### Create/Update Template
+```http
+POST /v1/templates
+```
+
+**Purpose**: Create a new template or update an existing one
+
+**Request Body**:
+```json
+{
+  "id": "contract-dispute",
+  "name": "Contract Dispute Template",
+  "description": "Template for breach of contract disputes",
+  "content": "# Demand Letter Template\n\n## Structure Guidelines...",
+  "jurisdiction": "California",
+  "firm_style": {
+    "tone": "firm but professional",
+    "letterhead": "Law Offices of Smith & Associates"
+  }
+}
+```
+
+**Required Fields**: `id`, `name`, `content`
+
+**Response**: 200 OK
+```json
+{
+  "template": {
+    "id": "contract-dispute",
+    "name": "Contract Dispute Template",
+    "description": "Template for breach of contract disputes",
+    "jurisdiction": "California",
+    "firm_style": {
+      "tone": "firm but professional",
+      "letterhead": "Law Offices of Smith & Associates"
+    },
+    "created_at": "2024-11-12T17:45:00.000Z",
+    "updated_at": "2024-11-12T17:45:00.000Z"
+  },
+  "action": "created"
 }
 ```
 
