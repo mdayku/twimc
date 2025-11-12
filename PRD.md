@@ -19,6 +19,7 @@
 - Implemented draft versioning (v1/v2) with automatic change logs and version history API
 - Added draft restore functionality (POST /v1/restore/:facts_id) to create new drafts from previous versions
 - Added template management API (GET/POST /v1/templates) with filesystem-backed storage
+- Added draft version restore functionality (PUT /v1/drafts/:facts_id/:version/restore)
 
 ## Overview
 
@@ -330,9 +331,8 @@ POST /v1/restore/:facts_id
 {
   "facts_id": "facts_1",
   "restored_from_version": 2,
-  "new_version": 3,
-  "draft_md": "# Demand Letter\n\n...",
-  "generated_at": "2024-11-12T17:50:00.000Z",
+  "new_version": 4,
+  "generated_at": "2024-11-12T18:30:00.000Z",
   "change_log": ["Restored from version 2"]
 }
 ```

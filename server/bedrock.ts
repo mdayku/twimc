@@ -23,6 +23,9 @@ const SYSTEM_PROMPT = `You are a cautious legal drafting assistant. Base all ass
 Do NOT hallucinate facts. Only use information explicitly provided in the facts JSON.
 Format your response as clean markdown with clear section headings.
 
+After the demand letter, include explanations for major sections in this format:
+[EXPLANATION: Section Name] Brief reason why this section was included based on the provided facts.
+
 Guardrails:
 - Do not include personal health information (PHI) or other sensitive data beyond what is explicitly present in facts.
 - If the user requests disallowed content, refuse and include [TODO: requires redaction or additional authorization].`
@@ -111,7 +114,7 @@ export async function generateWithBedrock(
   facts: any,
   templateMd?: string,
   firmStyle?: any
-): Promise<{ draft_md: string; issues: string[] }> {
+): Promise<{ draft_md: string; issues: string[]; explanations: Record<string, string> }> {
   const userPrompt = buildUserPrompt(facts, templateMd, firmStyle)
 
   // Prepare the request payload for Claude
@@ -132,7 +135,18 @@ export async function generateWithBedrock(
     const responseBody = await invokeWithRetry(payload)
 
     // Extract the generated text from Claude's response
-    const draftMd = responseBody.content?.[0]?.text || ''
+    const fullResponse = responseBody.content?.[0]?.text || ''
+
+    // Parse explanations from the response
+    const explanationRegex = /\[EXPLANATION: ([^\]]+)\] ([^\n]+)/g
+    const explanations: Record<string, string> = {}
+    let match
+    while ((match = explanationRegex.exec(fullResponse)) !== null) {
+      explanations[match[1]] = match[2].trim()
+    }
+
+    // Extract the draft markdown (everything before the first explanation)
+    const draftMd = fullResponse.split(/\[EXPLANATION:/)[0].trim()
 
     // Metrics: crude token estimates (Bedrock does not always return usage)
     const inputText = `${SYSTEM_PROMPT}\n\n${JSON.stringify(payload.messages)}`
@@ -147,7 +161,7 @@ export async function generateWithBedrock(
       issues.push(`Draft contains ${todoMatches.length} TODO placeholder(s) for missing information`)
     }
 
-    return { draft_md: draftMd, issues }
+    return { draft_md: draftMd, issues, explanations }
   } catch (error: any) {
     console.error('Bedrock API error:', error)
     
@@ -156,6 +170,7 @@ export async function generateWithBedrock(
     return {
       draft_md: fallbackDraft,
       issues: [`Bedrock API unavailable: ${error.message}`, 'Using fallback template'],
+      explanations: {}
     }
   }
 }

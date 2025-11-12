@@ -119,6 +119,7 @@ interface DraftRecord {
   generated_at: string
   change_log?: string[]
   input_hash?: string  // hash of inputs for change detection
+  explanations?: Record<string, string>  // explanations for major clauses
 }
 
 interface TemplateRecord {
@@ -307,7 +308,7 @@ app.post('/v1/generate', async (req, rep) => {
   }
 
   try {
-    const { draft_md, issues } = await generateWithBedrock(facts, effectiveTemplateMd, effectiveFirmStyle)
+    const { draft_md, issues, explanations } = await generateWithBedrock(facts, effectiveTemplateMd, effectiveFirmStyle)
 
     // Create new draft version
     const inputHash = generateInputHash(facts, effectiveTemplateMd, effectiveFirmStyle)
@@ -320,7 +321,8 @@ app.post('/v1/generate', async (req, rep) => {
       issues,
       generated_at: generatedAt,
       input_hash: inputHash,
-      change_log: []
+      change_log: [],
+      explanations
     }
 
     // Generate change log compared to previous version
@@ -341,6 +343,7 @@ app.post('/v1/generate', async (req, rep) => {
     const response = {
       draft_md,
       issues,
+      explanations,
       version: newVersion,
       generated_at: generatedAt,
       change_log: newDraft.change_log,
@@ -354,6 +357,7 @@ app.post('/v1/generate', async (req, rep) => {
         return {
           draft_md: requestedDraft.draft_md,
           issues: requestedDraft.issues,
+          explanations: requestedDraft.explanations || {},
           version: requestedDraft.version,
           generated_at: requestedDraft.generated_at,
           change_log: requestedDraft.change_log,
@@ -480,7 +484,8 @@ app.post('/v1/restore/:facts_id', async (req, rep) => {
     issues: [], // Clear issues for restored draft
     generated_at: now,
     input_hash: sourceDraft.input_hash,
-    change_log: [`Restored from version ${version}`]
+    change_log: [`Restored from version ${version}`],
+    explanations: sourceDraft.explanations
   }
 
   factsRecord.drafts.push(restoredDraft)
@@ -493,7 +498,48 @@ app.post('/v1/restore/:facts_id', async (req, rep) => {
     restored_from_version: version,
     new_version: newVersion,
     draft_md: restoredDraft.draft_md,
+    explanations: restoredDraft.explanations || {},
     generated_at: now,
+    change_log: restoredDraft.change_log
+  }
+})
+
+// Restore a previous draft version to latest
+app.put('/v1/drafts/:facts_id/:version/restore', async (req, rep) => {
+  const { facts_id, version } = req.params as { facts_id: string; version: string }
+  const versionNum = parseInt(version, 10)
+
+  const factsRecord = factsStore.get(facts_id)
+  if (!factsRecord) {
+    return rep.code(404).send({ error: 'facts_id not found' })
+  }
+
+  const targetDraft = factsRecord.drafts.find(d => d.version === versionNum)
+  if (!targetDraft) {
+    return rep.code(404).send({ error: 'version not found' })
+  }
+
+  // Create a new draft based on the target version
+  const newVersion = factsRecord.drafts.length + 1
+  const restoredDraft: DraftRecord = {
+    version: newVersion,
+    draft_md: targetDraft.draft_md,
+    issues: targetDraft.issues,
+    generated_at: new Date().toISOString(),
+    input_hash: targetDraft.input_hash,
+    change_log: [`Restored from version ${versionNum}`]
+  }
+
+  factsRecord.drafts.push(restoredDraft)
+  factsStore.set(facts_id, factsRecord)
+
+  app.log.info({ facts_id, from_version: versionNum, to_version: newVersion }, 'Draft version restored')
+
+  return {
+    facts_id,
+    restored_from_version: versionNum,
+    new_version: newVersion,
+    generated_at: restoredDraft.generated_at,
     change_log: restoredDraft.change_log
   }
 })
