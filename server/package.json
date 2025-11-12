@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx index.ts",
+    "build": "echo 'No build needed - TypeScript runs with tsx'",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
