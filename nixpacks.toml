@@ -1,0 +1,12 @@
+[phases.setup]
+nixPkgs = ['nodejs_20']
+
+[phases.install]
+cmds = ['npm ci']
+
+[phases.build]
+cmds = ['echo "Skipping build - no compilation needed"']
+
+[start]
+cmd = 'npm run dev --workspace=server'
+
