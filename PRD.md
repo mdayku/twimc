@@ -5,7 +5,7 @@
 1) Configure AWS Bedrock access and set ENV variables (API tokens, model, region)
 2) ✅ Implement ability to restore previous draft versions
 3) ✅ Include "why included" notes for major clauses in response
-4) Implement critic pass to check factual support for each claim
+4) ✅ Implement critic pass to check factual support for each claim
 5) Add PDF/DOCX attachment upload to /v1/intake
 6) Implement automatic text extraction from uploaded files
 7) Merge extracted text with structured facts
@@ -21,6 +21,7 @@
 - Added template management API (GET/POST /v1/templates) with filesystem-backed storage
 - Added draft version restore functionality (PUT /v1/drafts/:facts_id/:version/restore)
 - Enhanced generate responses with explanations for why major legal sections were included
+- Added critic pass: AI reviews drafts for factual accuracy and identifies unsupported claims
 
 ## Overview
 

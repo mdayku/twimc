@@ -165,6 +165,10 @@ export async function generateWithBedrock(
       issues.push(`Draft contains ${todoMatches.length} TODO placeholder(s) for missing information`)
     }
 
+    // Critic pass: check factual support for claims
+    const criticIssues = await runCriticPass(draftMd, facts)
+    issues.push(...criticIssues)
+
     return { draft_md: draftMd, issues, explanations }
   } catch (error: any) {
     console.error('Bedrock API error:', error)
@@ -234,5 +238,74 @@ Sincerely,
 
 ${facts.parties?.plaintiff_attorney || plaintiff}
 `
+}
+
+/**
+ * Critic pass: Review draft for factual support
+ */
+async function runCriticPass(draftMd: string, facts: any): Promise<string[]> {
+  const criticPrompt = `You are a legal fact-checker. Review the following demand letter draft and identify any claims, statements, or assertions that are NOT directly supported by the provided facts.
+
+Facts provided:
+${JSON.stringify(facts, null, 2)}
+
+Demand letter draft:
+${draftMd}
+
+Instructions:
+- List each unsupported claim with the exact text from the draft
+- Explain why it's not supported by the facts
+- If a claim is supported, do not mention it
+- Focus on factual accuracy, not legal strategy or completeness
+- Be specific and cite what facts are missing
+
+Format your response as:
+[UNSUPPORTED: "exact text from draft"] explanation of why it's unsupported.
+
+If there are no unsupported claims, respond with "All claims are factually supported."`
+
+  try {
+    const payload = {
+      anthropic_version: 'bedrock-2023-05-31',
+      max_tokens: 1024,
+      temperature: 0.1,
+      system: 'You are a meticulous legal fact-checker. Only identify claims that lack factual support.',
+      messages: [
+        {
+          role: 'user',
+          content: criticPrompt,
+        },
+      ],
+    }
+
+    const command = new InvokeModelCommand({
+      modelId: MODEL_ID,
+      contentType: 'application/json',
+      accept: 'application/json',
+      body: JSON.stringify(payload),
+    })
+
+    const response = await client.send(command)
+    const responseBody = JSON.parse(new TextDecoder().decode(response.body))
+    const criticResponse = responseBody.content?.[0]?.text || ''
+
+    if (criticResponse.includes('All claims are factually supported')) {
+      return []
+    }
+
+    // Parse unsupported claims
+    const unsupportedRegex = /\[UNSUPPORTED: "([^"]+)"\] ([^\n]+)/g
+    const issues: string[] = []
+    let match
+    while ((match = unsupportedRegex.exec(criticResponse)) !== null) {
+      issues.push(`Unsupported claim: "${match[1]}" - ${match[2]}`)
+    }
+
+    return issues
+  } catch (error: any) {
+    console.warn('Critic pass failed:', error.message)
+    // Don't fail the whole generation if critic pass fails
+    return []
+  }
 }
 
