@@ -11,6 +11,26 @@ const app = Fastify({
   }
 })
 
+// Simple Bearer token auth for all /v1/* endpoints (MVP)
+const API_TOKENS = (process.env.API_TOKENS || process.env.API_TOKEN || '')
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean)
+
+app.addHook('onRequest', async (req, rep) => {
+  // Leave health check open
+  if (!req.url.startsWith('/v1/')) return
+  if (API_TOKENS.length === 0) {
+    req.log.warn('API_TOKENS not set; /v1/* endpoints are unprotected')
+    return
+  }
+  const auth = req.headers['authorization'] || ''
+  const token = typeof auth === 'string' && auth.startsWith('Bearer ') ? auth.slice(7).trim() : ''
+  if (!token || !API_TOKENS.includes(token)) {
+    return rep.code(401).send({ error: 'Unauthorized' })
+  }
+})
+
 // In-memory storage for MVP (facts by ID)
 const factsStore = new Map<string, any>()
 let factsIdCounter = 1
