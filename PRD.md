@@ -1,5 +1,16 @@
 # Product Requirements Document (PRD) - Steno Demand Letter Generator
 
+## Top Priorities
+
+1) Enable Bedrock Guardrails and add retry logic for transient errors
+2) Add API token authentication to all endpoints (MVP-simple)
+3) Support attachments array in intake and log timestamps
+4) Add request/response logging with correlation IDs
+5) Add basic metrics: request duration + Bedrock token usage
+6) Meet performance target p95 < 5s (add simple benchmark harness)
+7) Implement draft versioning (v1/v2) with change log
+8) Add template management API: GET/POST /v1/templates
+
 ## Overview
 
 Steno is an AI-powered legal document generator that helps attorneys and paralegals create professional demand letters quickly and accurately. The system ingests case facts and generates structured legal documents using AWS Bedrock (Claude Sonnet), with export to Word format for final editing.

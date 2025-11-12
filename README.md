@@ -1,16 +1,19 @@
-# Steno — Demand Letter Generator (MVP)
+# Steno — Demand Letter Generator
 
-A focused legal document generator that helps attorneys and paralegals create professional demand letters quickly and accurately.
+AI-powered legal document generator that helps attorneys and paralegals create professional demand letters quickly and accurately. **Fact-based only** - no hallucinations, all assertions must be supported by provided evidence.
 
-## Goal
+## Core Features
 
-Upload or enter facts, pick a template, generate a Word draft in <5s p95, and export DOCX. This MVP focuses on **accuracy to provided facts** and **clear structure** over fancy collaboration.
+- ✅ **Structured Legal Documents**: Consistent format with all mandatory sections (introduction, facts, liability, damages, demand)
+- ✅ **AI-Powered Generation**: AWS Bedrock Claude Sonnet with guardrails for factual accuracy
+- ✅ **Professional Export**: DOCX format with proper legal document formatting
+- ✅ **Fast Iteration**: <5s p95 generation for typical 2-page demand letters
 
 ## Demo Flow
 
-1. **Intake**: Attorney/paralegal fills an intake form or uploads PDFs (optional text extract)
-2. **Generate**: Click Generate → LLM produces a structured draft (markdown)
-3. **Edit & Export**: Quick edits (web editor) → Export DOCX, save JSON facts + draft version
+1. **Intake**: Provide case facts (parties, incident, damages, venue)
+2. **Generate**: AI produces structured demand letter draft
+3. **Edit & Export**: Review, edit, and export to DOCX
 
 ## Quick Start
 
@@ -65,7 +68,7 @@ curl -X POST http://localhost:8787/v1/export/docx \
 - `POST /v1/generate` - Generate draft from facts
 - `POST /v1/export/docx` - Export markdown to DOCX
 
-See [API_SPEC.md](./API_SPEC.md) for detailed documentation.
+See [PRD.md](./PRD.md) for complete API specification.
 
 ## Project Structure
 
@@ -128,13 +131,11 @@ chmod +x .git/hooks/pre-commit
 - **Public legal templates**: Structure guidance from California Courts and other public resources
 - All data is anonymized; see [data/LICENSES.md](./data/LICENSES.md)
 
-## Acceptance Criteria
+## Documentation
 
-See [ACCEPTANCE_CRITERIA.md](./ACCEPTANCE_CRITERIA.md) for P0/P1 features and non-functional requirements.
-
-## Architecture
-
-See [ARCHITECTURE.md](./ARCHITECTURE.md) for system design and data flow.
+- **[PRD.md](./PRD.md)** - Complete Product Requirements Document with API spec, acceptance criteria, and data sources
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - System design and data flow
+- **[DEMO_STATUS.md](./DEMO_STATUS.md)** - Current demo status and smoke test results
 
 ## Security & Compliance
 

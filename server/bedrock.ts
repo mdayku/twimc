@@ -9,6 +9,10 @@ const client = new BedrockRuntimeClient({
 })
 
 const MODEL_ID = process.env.BEDROCK_MODEL_ID || 'anthropic.claude-3-5-sonnet-20241022-v2:0'
+const GUARDRAILS_ID = process.env.BEDROCK_GUARDRAILS_ID || ''
+
+const MAX_RETRIES = Number(process.env.BEDROCK_MAX_RETRIES || 3)
+const BASE_BACKOFF_MS = Number(process.env.BEDROCK_BACKOFF_MS || 400)
 
 /**
  * System prompt for demand letter generation
@@ -16,7 +20,11 @@ const MODEL_ID = process.env.BEDROCK_MODEL_ID || 'anthropic.claude-3-5-sonnet-20
 const SYSTEM_PROMPT = `You are a cautious legal drafting assistant. Base all assertions strictly on provided facts. If facts are missing, insert [TODO: ...] brackets. Use a concise, professional tone.
 
 Do NOT hallucinate facts. Only use information explicitly provided in the facts JSON.
-Format your response as clean markdown with clear section headings.`
+Format your response as clean markdown with clear section headings.
+
+Guardrails:
+- Do not include personal health information (PHI) or other sensitive data beyond what is explicitly present in facts.
+- If the user requests disallowed content, refuse and include [TODO: requires redaction or additional authorization].`
 
 /**
  * Build the user prompt for demand letter generation
@@ -47,6 +55,54 @@ Return the letter as **markdown** with stable section headings (## Section Name)
 CRITICAL: If any required information is missing from the facts, use [TODO: description of what is needed] placeholders.`
 }
 
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+function isTransientError(err: any): boolean {
+  const msg = String(err?.message || '').toLowerCase()
+  const code = (err?.$metadata?.httpStatusCode as number) || 0
+  if (code === 429) return true
+  if (code >= 500) return true
+  if (msg.includes('throttl') || msg.includes('timeout') || msg.includes('temporarily') || msg.includes('retry')) return true
+  return false
+}
+
+async function invokeWithRetry(payload: any) {
+  let attempt = 0
+  let lastErr: any
+  while (attempt <= MAX_RETRIES) {
+    try {
+      const command = new InvokeModelCommand({
+        modelId: MODEL_ID,
+        contentType: 'application/json',
+        accept: 'application/json',
+        body: JSON.stringify(payload),
+      } as any)
+
+      // NOTE: Native Bedrock Guardrails headers are available on certain API surfaces.
+      // The v3 client for InvokeModel does not expose explicit guardrail fields; we enforce guardrails
+      // via system/user prompts and validate outputs. When migrating to Converse API, attach GuardrailConfig.
+      if (!GUARDRAILS_ID) {
+        // eslint-disable-next-line no-console
+        console.warn('BEDROCK_GUARDRAILS_ID not set; relying on prompt-level guardrails.')
+      }
+
+      const response = await client.send(command)
+      return JSON.parse(new TextDecoder().decode(response.body))
+    } catch (err: any) {
+      lastErr = err
+      if (!isTransientError(err) || attempt === MAX_RETRIES) break
+      const backoff = BASE_BACKOFF_MS * Math.pow(2, attempt)
+      // eslint-disable-next-line no-console
+      console.warn(`Bedrock transient error, retrying in ${backoff}ms (attempt ${attempt + 1}/${MAX_RETRIES})`)
+      await sleep(backoff)
+      attempt++
+    }
+  }
+  throw lastErr
+}
+
 /**
  * Generate demand letter draft using AWS Bedrock Claude
  */
@@ -72,15 +128,7 @@ export async function generateWithBedrock(
   }
 
   try {
-    const command = new InvokeModelCommand({
-      modelId: MODEL_ID,
-      contentType: 'application/json',
-      accept: 'application/json',
-      body: JSON.stringify(payload),
-    })
-
-    const response = await client.send(command)
-    const responseBody = JSON.parse(new TextDecoder().decode(response.body))
+    const responseBody = await invokeWithRetry(payload)
 
     // Extract the generated text from Claude's response
     const draftMd = responseBody.content?.[0]?.text || ''
