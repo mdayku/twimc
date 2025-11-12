@@ -25,7 +25,19 @@ export default function RootLayout({
             {children}
           </main>
         </div>
-        <Toaster position="top-right" />
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            success: {
+              duration: 3000,
+              className: 'toast-success',
+            },
+            error: {
+              duration: 4000,
+              className: 'toast-error',
+            },
+          }}
+        />
       </body>
     </html>
   )
