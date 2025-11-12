@@ -8,13 +8,35 @@ import multipart from '@fastify/multipart'
 import { createHash } from 'crypto'
 import type { MultipartFile } from '@fastify/multipart'
 import { randomUUID } from 'crypto'
-import { recordRequestDuration } from './metrics.js'
+import { recordRequestDuration, recordRequestOutcome, recordOpenaiTokens, recordLlmUsageCost, getMetricsSnapshot } from './metrics.js'
 import { LlmClient } from './llm/provider.js'
 import { extractTextFromFile } from './extract.js'
+import { initDb, closeDb } from './db.js'
+import { runMigrations } from './migrations/run.js'
+import * as factsDb from './db/facts.js'
+import * as templatesDb from './db/templates.js'
+import { createPiiRedaction, createRequestBodySerializer, createResponseBodySerializer, createErrorSerializer } from './pii.js'
 
-const app = Fastify({ 
+// Configure PII redaction
+const piiConfig = createPiiRedaction()
+
+const app = Fastify({
   logger: {
-    level: process.env.LOG_LEVEL || 'info'
+    level: process.env.LOG_LEVEL || 'info',
+    serializers: {
+      req: (req) => ({
+        method: req.method,
+        url: req.url,
+        hostname: req.hostname,
+        remoteAddress: req.ip,
+        remotePort: req.socket?.remotePort
+      }),
+      res: (res) => ({
+        statusCode: res.statusCode,
+        contentLength: typeof res.getHeader === 'function' ? res.getHeader('content-length') : undefined
+      }),
+      err: createErrorSerializer(piiConfig)
+    }
   }
 })
 
@@ -27,11 +49,67 @@ await app.register(multipart, {
   }
 })
 
+// Add PII-safe request/response logging
+app.addHook('onRequest', async (req, reply) => {
+  // Log request with PII redaction
+  if (piiConfig.enabled) {
+    const safeBody = createRequestBodySerializer(piiConfig)(req.body)
+    app.log.info({
+      req: {
+        method: req.method,
+        url: req.url,
+        headers: {
+          'user-agent': req.headers['user-agent'],
+          'content-type': req.headers['content-type'],
+          'x-request-id': req.headers['x-request-id']
+        }
+      },
+      body: safeBody
+    }, 'Request received')
+  }
+})
+
+app.addHook('onResponse', async (req, reply) => {
+  // Log response with PII redaction
+  if (piiConfig.enabled) {
+    app.log.info({
+      res: {
+        statusCode: reply.statusCode,
+        headers: {
+          'content-type': reply.getHeader('content-type'),
+          'x-request-id': reply.getHeader('x-request-id')
+        }
+      }
+    }, 'Response sent')
+  }
+})
+
 // Simple Bearer token auth for all /v1/* endpoints (MVP)
 const API_TOKENS = (process.env.API_TOKENS || process.env.API_TOKEN || '')
   .split(',')
   .map(s => s.trim())
   .filter(Boolean)
+
+// Simple in-process rate limiting (per token or IP)
+const RATE_LIMIT_WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS || 60_000)
+const RATE_LIMIT_MAX = Number(process.env.RATE_LIMIT_MAX || 60)
+type RateRecord = { count: number; resetAt: number }
+const rateStore = new Map<string, RateRecord>()
+
+function rateLimitCheck(key: string) {
+  const now = Date.now()
+  const rec = rateStore.get(key)
+  if (!rec || rec.resetAt <= now) {
+    const newRec: RateRecord = { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS }
+    rateStore.set(key, newRec)
+    return { allowed: true, remaining: RATE_LIMIT_MAX - 1, resetAt: newRec.resetAt }
+  }
+  if (rec.count < RATE_LIMIT_MAX) {
+    rec.count += 1
+    return { allowed: true, remaining: RATE_LIMIT_MAX - rec.count, resetAt: rec.resetAt }
+  }
+  return { allowed: false, remaining: 0, resetAt: rec.resetAt }
+}
 
 app.addHook('onRequest', async (req, rep) => {
   // Correlation ID: honor incoming or generate new
@@ -52,6 +130,19 @@ app.addHook('onRequest', async (req, rep) => {
   if (!token || !API_TOKENS.includes(token)) {
     return rep.code(401).send({ error: 'Unauthorized' })
   }
+
+  // Rate limit: key by API token; fallback to IP if needed
+  const rlKey = `tok:${token}`
+  const result = rateLimitCheck(rlKey)
+  // Rate limit headers
+  rep.header('X-RateLimit-Limit', RATE_LIMIT_MAX.toString())
+  rep.header('X-RateLimit-Remaining', Math.max(0, result.remaining).toString())
+  rep.header('X-RateLimit-Reset', Math.floor(result.resetAt / 1000).toString())
+  if (!result.allowed) {
+    const retryAfterSec = Math.max(1, Math.ceil((result.resetAt - Date.now()) / 1000))
+    rep.header('Retry-After', retryAfterSec.toString())
+    return rep.code(429).send({ error: 'Too Many Requests' })
+  }
 })
 
 app.addHook('onResponse', async (req, rep) => {
@@ -60,6 +151,7 @@ app.addHook('onResponse', async (req, rep) => {
     const cid = (req as any).correlationId as string | undefined
     const durationMs = start ? Number((process.hrtime.bigint() - start) / 1000000n) : undefined
     recordRequestDuration(`${req.method} ${req.url}`, durationMs)
+    recordRequestOutcome(`${req.method} ${req.url}`, rep.statusCode < 400)
     req.log.info({
       cid,
       method: req.method,
@@ -73,7 +165,7 @@ app.addHook('onResponse', async (req, rep) => {
 })
 
 // In-memory storage for MVP (facts by ID with versioning)
-interface FactsRecord {
+export interface FactsRecord {
   facts_id: string
   facts_json: any
   attachments: any[]
@@ -81,7 +173,7 @@ interface FactsRecord {
   drafts: DraftRecord[]
 }
 
-interface DraftRecord {
+export interface DraftRecord {
   version: number
   draft_md: string
   issues: string[]
@@ -91,10 +183,10 @@ interface DraftRecord {
   explanations?: Record<string, string>  // explanations for major clauses
 }
 
-interface TemplateRecord {
+export interface TemplateRecord {
   id: string
   name: string
-  description: string
+  description?: string
   content: string
   jurisdiction?: string
   firm_style?: any
@@ -102,13 +194,21 @@ interface TemplateRecord {
   updated_at: string
 }
 
-const factsStore = new Map<string, FactsRecord>()
-let factsIdCounter = 1
+// Initialize database connection and run migrations
+try {
+  initDb()
+  await runMigrations()
+  console.log('✅ Database initialized and migrations completed')
+} catch (error) {
+  console.error('❌ Database initialization failed:', error)
+  if (process.env.DATABASE_URL) {
+    throw error // Fail fast if DATABASE_URL is set but connection fails
+  } else {
+    console.warn('⚠️  DATABASE_URL not set, continuing with in-memory fallback (not recommended for production)')
+  }
+}
 
-// Template store (in-memory for MVP)
-const templatesStore = new Map<string, TemplateRecord>()
-
-// Initialize templates (load from filesystem for MVP)
+// Initialize templates (load from filesystem and save to database)
 async function initializeTemplates() {
   try {
     const fs = await import('fs/promises')
@@ -132,7 +232,8 @@ async function initializeTemplates() {
       updated_at: now
     }
 
-    templatesStore.set(genericTemplate.id, genericTemplate)
+    // Save to database (upsert - will create or update)
+    await templatesDb.upsertTemplate(genericTemplate)
     console.log('✅ Loaded generic demand template')
   } catch (error) {
     console.warn('⚠️  Could not load generic template:', error instanceof Error ? error.message : String(error))
@@ -186,18 +287,18 @@ export function mergeExtractedTextWithFacts(
   const allText = extractedTexts.map(et => et.text).join('\n\n')
 
   // Look for missing incident description
-  if (!facts.incident || facts.incident.trim() === '' || facts.incident.includes('[TODO]')) {
+  if (!facts.incident || facts.incident.trim() === '' || facts.incident.includes('[TODO')) {
     // Try to extract incident description from text
     const incidentPatterns = [
-      /incident[:\s]*(.*?)(?:\n|$)/i,
-      /accident[:\s]*(.*?)(?:\n|$)/i,
-      /occurred[:\s]*(.*?)(?:\n|$)/i
+      /incident[:\s]*([^.]*\.)/i,
+      /accident[:\s]*([^.]*\.)/i,
+      /occurred[:\s]*([^.]*\.)/i
     ]
 
     for (const pattern of incidentPatterns) {
       const match = allText.match(pattern)
       if (match && match[1].trim().length > 10) {
-        mergedFacts.incident = match[1].trim()
+        mergedFacts.incident = match[1].trim().replace(/\.$/, '')
         break
       }
     }
@@ -366,15 +467,8 @@ app.post('/v1/intake', async (req, rep) => {
     return rep.code(400).send({ error: 'facts_json is required' })
   }
 
-  const factsId = `facts_${factsIdCounter++}`
-  const factsRecord: FactsRecord = {
-    facts_id: factsId,
-    facts_json,
-    attachments: attachmentsMeta,
-    created_at: receivedAt,
-    drafts: []
-  }
-  factsStore.set(factsId, factsRecord)
+  const factsId = await factsDb.generateFactsId()
+  await factsDb.createFacts(factsId, facts_json, attachmentsMeta, receivedAt)
 
   app.log.info({ factsId, receivedAt, attachments_count: attachmentsMeta.length }, 'Facts stored')
   return { facts_id: factsId, attachments: attachmentsMeta, created_at: receivedAt }
@@ -389,7 +483,7 @@ app.post('/v1/generate', async (req, rep) => {
 
   // Allow either facts_id or direct facts_json
   if (facts_id) {
-    factsRecord = factsStore.get(facts_id)
+    factsRecord = await factsDb.getFacts(facts_id)
     if (!factsRecord) {
       return rep.code(404).send({ error: 'facts_id not found' })
     }
@@ -405,7 +499,7 @@ app.post('/v1/generate', async (req, rep) => {
   let effectiveFirmStyle = firm_style
 
   if (template_id && !template_md) {
-    const template = templatesStore.get(template_id)
+    const template = await templatesDb.getTemplate(template_id)
     if (template) {
       effectiveTemplateMd = template.content
       effectiveFirmStyle = template.firm_style || firm_style
@@ -418,9 +512,18 @@ app.post('/v1/generate', async (req, rep) => {
   try {
     const { draft_md, issues, explanations, input_tokens, output_tokens } = await llmClient.generateDraft(facts, effectiveTemplateMd, effectiveFirmStyle)
 
+    // Record LLM token usage and estimated cost
+    if (provider === 'openai') {
+      recordOpenaiTokens(input_tokens, output_tokens)
+    }
+    recordLlmUsageCost(provider as 'openai' | 'bedrock', input_tokens, output_tokens)
+
     // Create new draft version
     const inputHash = generateInputHash(facts, effectiveTemplateMd, effectiveFirmStyle)
-    const newVersion = (factsRecord?.drafts.length || 0) + 1
+    
+    // Get current drafts to determine next version
+    const currentDrafts = factsRecord ? await factsDb.getDrafts(facts_id) : []
+    const newVersion = currentDrafts.length + 1
     const generatedAt = new Date().toISOString()
 
     const newDraft: DraftRecord = {
@@ -434,8 +537,8 @@ app.post('/v1/generate', async (req, rep) => {
     }
 
     // Generate change log compared to previous version
-    if (factsRecord && factsRecord.drafts.length > 0) {
-      const prevDraft = factsRecord.drafts[factsRecord.drafts.length - 1]
+    if (currentDrafts.length > 0) {
+      const prevDraft = currentDrafts[currentDrafts.length - 1]
       newDraft.change_log = generateChangeLog(prevDraft.draft_md, draft_md)
     } else {
       newDraft.change_log = ['Initial draft generated']
@@ -443,8 +546,7 @@ app.post('/v1/generate', async (req, rep) => {
 
     // Store the draft if we have a facts record
     if (factsRecord) {
-      factsRecord.drafts.push(newDraft)
-      factsStore.set(facts_id, factsRecord)
+      await factsDb.addDraft(facts_id, newDraft)
     }
 
     // Return response with versioning info
@@ -482,17 +584,21 @@ app.post('/v1/generate', async (req, rep) => {
   }
 })
 
+// Metrics endpoint (protected with Bearer auth via onRequest hook)
+app.get('/v1/metrics', async (_req, _rep) => {
+  return getMetricsSnapshot()
+})
 // List draft versions for a facts_id
 app.get('/v1/drafts/:facts_id', async (req, rep) => {
   const { facts_id } = req.params as { facts_id: string }
 
-  const factsRecord = factsStore.get(facts_id)
+  const factsRecord = await factsDb.getFacts(facts_id)
   if (!factsRecord) {
     return rep.code(404).send({ error: 'facts_id not found' })
   }
 
   // Return summary of drafts without full content
-  const drafts = factsRecord.drafts.map(draft => ({
+  const drafts = factsRecord.drafts.map((draft: DraftRecord) => ({
     version: draft.version,
     generated_at: draft.generated_at,
     issues_count: draft.issues.length,
@@ -508,7 +614,8 @@ app.get('/v1/drafts/:facts_id', async (req, rep) => {
 
 // Template management endpoints
 app.get('/v1/templates', async (req, rep) => {
-  const templates = Array.from(templatesStore.values()).map(template => ({
+  const allTemplates = await templatesDb.getAllTemplates()
+  const templates = allTemplates.map(template => ({
     id: template.id,
     name: template.name,
     description: template.description,
@@ -532,7 +639,7 @@ app.post('/v1/templates', async (req, rep) => {
   }
 
   const now = new Date().toISOString()
-  const existing = templatesStore.get(id)
+  const existing = await templatesDb.getTemplate(id)
 
   const template: TemplateRecord = {
     id,
@@ -545,7 +652,7 @@ app.post('/v1/templates', async (req, rep) => {
     updated_at: now
   }
 
-  templatesStore.set(id, template)
+  await templatesDb.upsertTemplate(template)
 
   app.log.info({ template_id: id, action: existing ? 'updated' : 'created' }, 'Template saved')
 
@@ -572,12 +679,12 @@ app.post('/v1/restore/:facts_id', async (req, rep) => {
     return rep.code(400).send({ error: 'version number is required' })
   }
 
-  const factsRecord = factsStore.get(facts_id)
+  const factsRecord = await factsDb.getFacts(facts_id)
   if (!factsRecord) {
     return rep.code(404).send({ error: 'facts_id not found' })
   }
 
-  const sourceDraft = factsRecord.drafts.find(d => d.version === version)
+  const sourceDraft = factsRecord.drafts.find((d: DraftRecord) => d.version === version)
   if (!sourceDraft) {
     return rep.code(404).send({ error: `version ${version} not found` })
   }
@@ -596,8 +703,7 @@ app.post('/v1/restore/:facts_id', async (req, rep) => {
     explanations: sourceDraft.explanations
   }
 
-  factsRecord.drafts.push(restoredDraft)
-  factsStore.set(facts_id, factsRecord)
+  await factsDb.addDraft(facts_id, restoredDraft)
 
   app.log.info({ facts_id, from_version: version, to_version: newVersion }, 'Draft version restored')
 
@@ -617,12 +723,12 @@ app.put('/v1/drafts/:facts_id/:version/restore', async (req, rep) => {
   const { facts_id, version } = req.params as { facts_id: string; version: string }
   const versionNum = parseInt(version, 10)
 
-  const factsRecord = factsStore.get(facts_id)
+  const factsRecord = await factsDb.getFacts(facts_id)
   if (!factsRecord) {
     return rep.code(404).send({ error: 'facts_id not found' })
   }
 
-  const targetDraft = factsRecord.drafts.find(d => d.version === versionNum)
+  const targetDraft = factsRecord.drafts.find((d: DraftRecord) => d.version === versionNum)
   if (!targetDraft) {
     return rep.code(404).send({ error: 'version not found' })
   }
@@ -638,8 +744,7 @@ app.put('/v1/drafts/:facts_id/:version/restore', async (req, rep) => {
     change_log: [`Restored from version ${versionNum}`]
   }
 
-  factsRecord.drafts.push(restoredDraft)
-  factsStore.set(facts_id, factsRecord)
+  await factsDb.addDraft(facts_id, restoredDraft)
 
   app.log.info({ facts_id, from_version: versionNum, to_version: newVersion }, 'Draft version restored')
 
@@ -681,5 +786,20 @@ app.listen({ port, host }, (err, address) => {
     process.exit(1)
   }
   app.log.info(`Server listening at ${address}`)
+})
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  app.log.info('Shutting down gracefully...')
+  await app.close()
+  await closeDb()
+  process.exit(0)
+})
+
+process.on('SIGTERM', async () => {
+  app.log.info('Shutting down gracefully...')
+  await app.close()
+  await closeDb()
+  process.exit(0)
 })
 

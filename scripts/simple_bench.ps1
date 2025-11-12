@@ -1,7 +1,7 @@
 $env:API_TOKEN = "dev-token-123"
 
 # Read sample fact
-$facts = Get-Content "data/facts_seed.json" | ConvertFrom-Json
+$facts = Get-Content "../data/facts_seed.json" | ConvertFrom-Json
 $testFact = $facts[0]
 
 $body = @{ facts_json = $testFact } | ConvertTo-Json -Depth 10

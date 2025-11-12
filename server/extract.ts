@@ -33,7 +33,7 @@ export async function extractTextFromFile(
  */
 async function extractTextFromPDF(buf: Buffer): Promise<string> {
   try {
-    const data = await pdfParse(buf)
+    const data = await (pdfParse as any)(buf)
     return data.text || ''
   } catch (error) {
     console.error('Error extracting text from PDF:', error)

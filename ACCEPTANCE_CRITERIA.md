@@ -1,38 +1,8 @@
 # Product Requirements Document (PRD) - Steno Demand Letter Generator
 
-## Top Priorities
-
-1) ✅ Add PII redaction in logs (configurable toggle) - COMPLETED
-2) ✅ Replace in-memory storage with PostgreSQL/Redis - COMPLETED (PostgreSQL)
-3) ✅ End-to-end tests: intake → generate → export - COMPLETED
-4) ✅ Unit tests for DOCX conversion - COMPLETED
-5) ✅ Fallback template unit tests - COMPLETED
-6) ✅ Integration tests: error handling scenarios - COMPLETED
-7) ✅ Provider integration tests (OpenAI) - COMPLETED
-8) Production deploy (Vercel) with proper secrets - PENDING
-
-### Recent Changes
-- ✅ **Testing Suite Complete**: All unit tests (schema, PII, DOCX, fallback), integration tests (e2e, error handling), and provider tests passing
-- ✅ **PII Redaction**: Configurable redaction of emails, phone numbers, SSNs in logs and error messages
-- ✅ **PostgreSQL Migration**: Replaced in-memory storage with persistent PostgreSQL database (facts, drafts, templates)
-- ✅ **Rate Limiting**: In-process rate limiting per API token with standard HTTP headers
-- ✅ **OpenAI Integration**: Switched from GPT-5 to GPT-4o for faster response times (15s vs 83s)
-- Added Bearer auth for /v1/* and multipart attachments + timestamps for intake
-- Implemented correlation ID logging (x-request-id) with duration in server logs
-- Added Bedrock retry with exponential backoff and prompt-level guardrails
-- Added in-process metrics: per-route request duration (avg) and token usage tracking
-- Implemented draft versioning (v1/v2) with automatic change logs and version history API
-- Added draft restore functionality (POST /v1/restore/:facts_id) to create new drafts from previous versions
-- Added template management API (GET/POST /v1/templates) with database-backed storage
-- Enhanced generate responses with explanations for why major legal sections were included
-- Added critic pass: AI reviews drafts for factual accuracy and identifies unsupported claims
-- Added LLM provider abstraction: Support for both OpenAI and AWS Bedrock with simple env flag switch
-- Added PDF/DOCX file upload to /v1/intake with automatic text extraction using pdf-parse and mammoth
-- Implemented intelligent text merging: Extract incident details and damage amounts from uploaded documents
-
 ## Overview
 
-Steno is an AI-powered legal document generator that helps attorneys and paralegals create professional demand letters quickly and accurately. The system ingests case facts and generates structured legal documents using either OpenAI GPT models or AWS Bedrock (Claude Sonnet), with export to Word format for final editing.
+Steno is an AI-powered legal document generator that helps attorneys and paralegals create professional demand letters quickly and accurately. The system ingests case facts and generates structured legal documents using AWS Bedrock (Claude Sonnet), with export to Word format for final editing.
 
 ### Core Flow
 1. **Intake**: Attorney/paralegal provides case facts (parties, incident, damages, venue)
@@ -51,8 +21,8 @@ Steno is an AI-powered legal document generator that helps attorneys and paraleg
 Local development: `http://localhost:8787`
 
 ### Authentication
-**Current**: Bearer token required for all `/v1/*` endpoints (localhost or deployed)  
-Pass `Authorization: Bearer <token>`; configure one or more tokens via env: `API_TOKEN` or `API_TOKENS=token1,token2`
+**MVP**: No authentication required (localhost only)  
+**Future**: Bearer token in `Authorization` header
 
 ### Endpoints
 
@@ -73,12 +43,6 @@ GET /health
 POST /v1/intake
 ```
 **Purpose**: Store case facts and return a unique identifier
-
-**Headers**:
-```http
-Authorization: Bearer <token>
-X-Request-Id: <optional-correlation-id>
-```
 
 **Request Body**:
 ```json
@@ -111,17 +75,6 @@ X-Request-Id: <optional-correlation-id>
 }
 ```
 
-Or as multipart form (file uploads):
-
-```http
-Content-Type: multipart/form-data
-Authorization: Bearer <token>
-
-fields:
-- facts_json: stringified JSON (same shape as above)
-- attachments: one or more files (each up to 10MB; max 5 files)
-```
-
 **Required Fields**:
 - `facts_json.parties.plaintiff` (string)
 - `facts_json.parties.defendant` (string)
@@ -140,12 +93,6 @@ fields:
 POST /v1/generate
 ```
 **Purpose**: Generate a demand letter draft using AWS Bedrock (Claude)
-
-**Headers**:
-```http
-Authorization: Bearer <token>
-X-Request-Id: <optional-correlation-id>
-```
 
 **Request Body** (Option 1 - Use stored facts):
 ```json
@@ -176,22 +123,9 @@ X-Request-Id: <optional-correlation-id>
   "draft_md": "# Demand Letter\n\n## Date and Recipient\n\n...",
   "issues": [
     "Draft contains 2 TODO placeholder(s) for missing information"
-  ],
-  "explanations": {
-    "Introduction": "Included to formally introduce the demand and establish the sender's position",
-    "Statement of Facts": "Included to provide chronological narrative of the events based on provided incident details",
-    "Liability": "Included to explain why the defendant is legally responsible for the damages",
-    "Damages": "Included to quantify the financial losses suffered based on provided damage amounts",
-    "Demand": "Included to clearly state the compensation requested and deadline for response"
-  },
-  "version": 1,
-  "generated_at": "2024-11-12T17:45:00.000Z",
-  "change_log": ["Initial draft generated"],
-  "facts_id": "facts_1"
+  ]
 }
 ```
-
-**Versioning**: Each `/v1/generate` call creates a new version. Use `version` parameter to retrieve specific versions, or `PUT /v1/drafts/:facts_id/:version/restore` to create a new draft from a previous version.
 
 **Draft Structure** (sections in markdown):
 - Recipient block and date
@@ -208,12 +142,6 @@ POST /v1/export/docx
 ```
 **Purpose**: Convert markdown draft to Word document (.docx)
 
-**Headers**:
-```http
-Authorization: Bearer <token>
-X-Request-Id: <optional-correlation-id>
-```
-
 **Request Body**:
 ```json
 {
@@ -226,132 +154,6 @@ X-Request-Id: <optional-correlation-id>
 - **Content-Type**: `application/vnd.openxmlformats-officedocument.wordprocessingml.document`
 - **Content-Disposition**: `attachment; filename="demand_letter.docx"`
 - **Body**: Binary DOCX file
-
-#### List Draft Versions
-```http
-GET /v1/drafts/:facts_id
-```
-
-**Purpose**: List all draft versions for a facts record
-
-**Response**: 200 OK
-```json
-{
-  "facts_id": "facts_1",
-  "total_drafts": 2,
-  "drafts": [
-    {
-      "version": 1,
-      "generated_at": "2024-11-12T17:45:00.000Z",
-      "issues_count": 0,
-      "change_log": ["Initial draft generated"]
-    },
-    {
-      "version": 2,
-      "generated_at": "2024-11-12T17:46:00.000Z",
-      "issues_count": 1,
-      "change_log": ["Modified section: Damages", "Resolved 1 TODO placeholder"]
-    }
-  ]
-}
-```
-
-#### List Templates
-```http
-GET /v1/templates
-```
-
-**Purpose**: List all available demand letter templates
-
-**Response**: 200 OK
-```json
-{
-  "templates": [
-    {
-      "id": "generic-demand",
-      "name": "Generic Demand Letter",
-      "description": "Standard demand letter template with sections for introduction, facts, liability, damages, and demand",
-      "jurisdiction": "General",
-      "firm_style": {
-        "tone": "professional and firm"
-      },
-      "created_at": "2024-11-12T17:45:00.000Z",
-      "updated_at": "2024-11-12T17:45:00.000Z"
-    }
-  ],
-  "total": 1
-}
-```
-
-#### Create/Update Template
-```http
-POST /v1/templates
-```
-
-**Purpose**: Create a new template or update an existing one
-
-**Request Body**:
-```json
-{
-  "id": "contract-dispute",
-  "name": "Contract Dispute Template",
-  "description": "Template for breach of contract disputes",
-  "content": "# Demand Letter Template\n\n## Structure Guidelines...",
-  "jurisdiction": "California",
-  "firm_style": {
-    "tone": "firm but professional",
-    "letterhead": "Law Offices of Smith & Associates"
-  }
-}
-```
-
-**Required Fields**: `id`, `name`, `content`
-
-**Response**: 200 OK
-```json
-{
-  "template": {
-    "id": "contract-dispute",
-    "name": "Contract Dispute Template",
-    "description": "Template for breach of contract disputes",
-    "jurisdiction": "California",
-    "firm_style": {
-      "tone": "firm but professional",
-      "letterhead": "Law Offices of Smith & Associates"
-    },
-    "created_at": "2024-11-12T17:45:00.000Z",
-    "updated_at": "2024-11-12T17:45:00.000Z"
-  },
-  "action": "created"
-}
-```
-
-#### Restore Draft Version
-```http
-POST /v1/restore/:facts_id
-```
-
-**Purpose**: Create a new draft by restoring content from a previous version
-
-**Request Body**:
-```json
-{
-  "version": 2
-}
-```
-
-**Required Fields**: `version` (number)
-
-**Response**: 200 OK
-```json
-{
-  "facts_id": "facts_1",
-  "restored_from_version": 2,
-  "new_version": 4,
-  "generated_at": "2024-11-12T18:30:00.000Z",
-  "change_log": ["Restored from version 2"]
-}
-```
 
 ### Error Response Format
 ```json
@@ -448,8 +250,8 @@ open('data/facts_seed.json','w',encoding='utf-8').write(json.dumps(rows, indent=
 - [x] Returns unique `facts_id`
 - [x] Persists facts in memory storage
 - [x] Validates required fields: parties, incident, damages
-- [x] Accepts optional attachments array (multipart or JSON metadata)
-- [x] Logs intake with timestamp
+- [ ] Accepts optional attachments array
+- [ ] Logs intake with timestamp
 
 **Acceptance Test**: Submit valid facts JSON, receive facts_id, retrieve via generate endpoint
 
@@ -479,7 +281,7 @@ open('data/facts_seed.json','w',encoding='utf-8').write(json.dumps(rows, indent=
 **Acceptance Test**: Export generated draft, open in Word, verify formatting
 
 ### 4. Performance
-- [x] p95 end-to-end latency < 5s for ~2-page facts input (with Bedrock)
+- [ ] p95 end-to-end latency < 5s for ~2-page facts input (with Bedrock)
 - [x] Health endpoint responds in < 100ms
 - [x] DOCX export completes in < 2s for typical letter
 
@@ -496,40 +298,40 @@ open('data/facts_seed.json','w',encoding='utf-8').write(json.dumps(rows, indent=
 ### P1 Features (Should Have, Post-MVP)
 
 ### 1. Versioning
-- [x] Track draft versions (v1, v2, etc.) per facts_id
-- [x] Change log showing what changed between versions
-- [x] Ability to restore previous version
+- [ ] Track draft versions (v1, v2, etc.) per facts_id
+- [ ] Change log showing what changed between versions
+- [ ] Ability to restore previous version
 
 ### 2. Template Management
-- [x] GET `/v1/templates` lists available templates
-- [x] POST `/v1/templates` creates/updates firm templates
-- [x] Template includes firm style variables (tone, letterhead, signature block)
+- [ ] GET `/v1/templates` lists available templates
+- [ ] POST `/v1/templates` creates/updates firm templates
+- [ ] Template includes firm style variables (tone, letterhead, signature block)
 - [ ] Support multiple jurisdiction-specific templates
 
 ### 3. Explainability
-- [x] Include "why included" notes for major clauses
+- [ ] Include "why included" notes for major clauses
 - [ ] Hover tooltips in web UI showing rationale from prompt
-- [x] Critic pass that checks factual support for each claim
+- [ ] Critic pass that checks factual support for each claim
 
 ### 4. Text Extraction
-- [x] Upload PDF/DOCX attachments via `/v1/intake`
-- [x] Automatic text extraction from uploaded files
-- [x] Merge extracted text with structured facts
+- [ ] Upload PDF/DOCX attachments via `/v1/intake`
+- [ ] Automatic text extraction from uploaded files
+- [ ] Merge extracted text with structured facts
 
 ### Non-Functional Requirements
 
 ### Security & Privacy
 - [x] All secrets stored in `.env`, never logged
 - [x] AWS credentials via standard credential chain
-- [x] Bedrock Guardrails (prompt-level; native guardrails to follow)
+- [ ] Bedrock Guardrails enabled (blocks personal health info)
 - [ ] PII redaction in logs (configurable toggle)
-- [x] API token authentication (Bearer) for `/v1/*`
+- [ ] API token authentication (basic auth for MVP)
 
 ### Reliability
 - [x] Graceful error handling with descriptive messages
 - [x] Structured logging (Fastify logger)
-- [x] Request/response logging with correlation IDs
-- [x] Automatic retry on transient Bedrock errors
+- [ ] Request/response logging with correlation IDs
+- [ ] Automatic retry on transient Bedrock errors
 
 ### Maintainability
 - [x] TypeScript with strict mode
@@ -538,21 +340,21 @@ open('data/facts_seed.json','w',encoding='utf-8').write(json.dumps(rows, indent=
 - [x] Justfile with standard commands (typecheck, test, lint, ship)
 
 ### Observability
-- [x] Request duration metrics
-- [x] Bedrock/OpenAI token usage tracking
+- [ ] Request duration metrics
+- [ ] Bedrock token usage tracking
 - [ ] Error rate monitoring
 - [ ] Cost tracking per generate request
 
 ### Testing
 
-### Unit Tests
-- [x] Schema validation tests (facts merge & attachments)
+### Unit Tests (TBD)
+- [ ] Schema validation tests
 - [ ] Markdown to DOCX conversion tests
 - [ ] Fallback template generation tests
 
-### Integration Tests
+### Integration Tests (TBD)
 - [ ] End-to-end flow: intake → generate → export
-- [ ] Provider integration (OpenAI)
+- [ ] Bedrock integration (requires credentials)
 - [ ] Error handling scenarios
 
 ### Evaluation Suite (See EVALS.md)

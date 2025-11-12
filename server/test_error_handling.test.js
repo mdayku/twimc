@@ -156,7 +156,7 @@ async function testMissingDraftMdInExport() {
 }
 
 async function testInvalidVersion() {
-  console.log('Test 7: Invalid version number...')
+  console.log('Test 7: Invalid version number in restore...')
   // First create a facts record
   const intakeResponse = await makeRequest('/v1/intake', 'POST', {
     facts_json: {
@@ -173,9 +173,8 @@ async function testInvalidVersion() {
 
   const factsId = intakeResponse.data.facts_id
 
-  // Try to get a non-existent version
-  const response = await makeRequest('/v1/generate', 'POST', {
-    facts_id: factsId,
+  // Try to restore a non-existent version
+  const response = await makeRequest(`/v1/restore/${factsId}`, 'POST', {
     version: 999
   })
 
@@ -305,4 +304,5 @@ runErrorHandlingTests().then(success => {
   console.error('❌ Error handling test suite error:', error)
   process.exit(1)
 })
+
 
