@@ -2,14 +2,14 @@
 
 ## Top Priorities
 
-1) Add error rate monitoring and per-request cost tracking
-2) Implement rate limiting per API key/client
-3) Add PII redaction in logs (configurable toggle)
-4) Replace in-memory storage with PostgreSQL/Redis
-5) Production deploy (Vercel/AWS) with proper secrets and IAM
-6) End-to-end tests: intake → generate → export
-7) Unit tests for DOCX conversion
-8) Fallback template unit tests
+1) Add PII redaction in logs (configurable toggle)
+2) Replace in-memory storage with PostgreSQL/Redis
+3) End-to-end tests: intake → generate → export
+4) Unit tests for DOCX conversion
+5) Fallback template unit tests
+6) Integration tests: error handling scenarios
+7) Provider integration tests (OpenAI)
+8) Production deploy (Vercel) with proper secrets
 
 ### Recent Changes
 - Added Bearer auth for /v1/* and multipart attachments + timestamps for intake
@@ -26,6 +26,8 @@
 - Added PDF/DOCX file upload to /v1/intake with automatic text extraction using pdf-parse and mammoth
 - Implemented intelligent text merging: Extract incident details and damage amounts from uploaded documents
 - Added schema validation unit tests for facts merging and attachment processing
+- Implemented per-route metrics with success/error counts and token/cost tracking
+- Added rate limiting per API token with standard rate-limit headers
 
 ## Overview
 
@@ -549,7 +551,7 @@ open('data/facts_seed.json','w',encoding='utf-8').write(json.dumps(rows, indent=
 
 ### Integration Tests
 - [ ] End-to-end flow: intake → generate → export
-- [ ] Provider integration (OpenAI/Bedrock)
+- [ ] Provider integration (OpenAI)
 - [ ] Error handling scenarios
 
 ### Evaluation Suite (See EVALS.md)
