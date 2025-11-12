@@ -11,20 +11,23 @@
 6) ✅ Integration tests: error handling scenarios - COMPLETED
 7) ✅ Provider integration tests (OpenAI) - COMPLETED
 
-### Frontend (In Progress 🚧)
-1) Initialize React app (Next.js/Vite) with TypeScript, Tailwind, ESLint
-2) Set up API client with Bearer auth and error handling
-3) Create routing and main layout (Home, New Letter, History, Templates)
-4) Build intake form with file upload (drag-and-drop, PDF/DOCX support)
-5) Create facts input form with validation (parties, incident, damages)
-6) Implement draft generation page with loading state and markdown preview
-7) Build draft editor with markdown support and live preview
-8) Set up Google OAuth 2.0 (Cloud Console, Drive API, Docs API)
-9) Implement export to Google Docs with markdown conversion
-10) Create templates page (list, create, edit, preview)
-11) Build draft history page with version timeline
-12) Add UI polish (design system, toast notifications, accessibility)
-13) Deploy frontend to Vercel with environment variables
+### Frontend Core Features (Complete ✅)
+1) ✅ Initialize React app (Next.js/Vite) with TypeScript, Tailwind, ESLint - COMPLETED
+2) ✅ Set up API client with Bearer auth and error handling - COMPLETED
+3) ✅ Create routing and main layout (Home, New Letter, History, Templates) - COMPLETED
+4) ✅ Build intake form with file upload (drag-and-drop, PDF/DOCX support) - COMPLETED
+5) ✅ Create facts input form with validation (parties, incident, damages) - COMPLETED
+6) ✅ Implement draft generation page with loading state and markdown preview - COMPLETED
+7) ✅ Build draft editor with markdown support and live preview - COMPLETED
+8) ✅ Set up Google OAuth 2.0 integration (Cloud Console, Drive API, Docs API) - COMPLETED
+9) ✅ Implement export to Google Docs with markdown conversion - COMPLETED
+
+### Remaining Tasks (In Progress 🚧)
+1) Configure Google Cloud Console (manual setup - see Phase 3.4)
+2) Create templates page (list, create, edit, preview)
+3) Build draft history page with version timeline
+4) Add UI polish (design system, toast notifications, accessibility)
+5) Deploy frontend to Vercel with environment variables
 
 ### Recent Changes
 - ✅ **Testing Suite Complete**: All unit tests (schema, PII, DOCX, fallback), integration tests (e2e, error handling), and provider tests passing
@@ -516,102 +519,110 @@ Build a React-based web application for the Steno Demand Letter Generator that a
 
 **Demo Goal:** Complete intake → generate → export to Google Docs workflow
 
-### Phase 1: Project Setup & Foundation (P0)
+### Phase 1: Project Setup & Foundation (P0) - COMPLETED
 
 #### 1.1 Initialize React Application
-- [ ] Create React app with TypeScript (Vite or Next.js)
-- [ ] Set up project structure (components, pages, hooks, utils, types)
-- [ ] Configure Tailwind CSS or preferred styling solution
-- [ ] Set up ESLint, Prettier, and TypeScript strict mode
-- [ ] Create `.env` file with API base URL and tokens
+- [x] Create React app with TypeScript (Vite or Next.js)
+- [x] Set up project structure (components, pages, hooks, utils, types)
+- [x] Configure Tailwind CSS or preferred styling solution
+- [x] Set up ESLint, Prettier, and TypeScript strict mode
+- [x] Create `.env` file with API base URL and tokens
 
 #### 1.2 API Client Setup
-- [ ] Create API client service (`/src/services/api.ts`)
-- [ ] Implement Bearer token authentication
-- [ ] Add request/response interceptors for error handling
-- [ ] Create TypeScript types for all API endpoints
-- [ ] Add loading states and error handling utilities
+- [x] Create API client service (`/src/services/api.ts`)
+- [x] Implement Bearer token authentication
+- [x] Add request/response interceptors for error handling
+- [x] Create TypeScript types for all API endpoints
+- [x] Add loading states and error handling utilities
 
 #### 1.3 Routing & Layout
-- [ ] Set up React Router (or Next.js routing)
-- [ ] Create main layout component with navigation
-- [ ] Define routes: Home, New Letter, Letter History, Templates, Settings
-- [ ] Add protected route wrapper (if multi-user in future)
+- [x] Set up React Router (or Next.js routing)
+- [x] Create main layout component with navigation
+- [x] Define routes: Home, New Letter, Letter History, Templates, Settings
+- [x] Add protected route wrapper (if multi-user in future)
 
-### Phase 2: Core Features - Intake & Generation (P0)
+### Phase 2: Core Features - Intake & Generation (P0) - COMPLETED
 
 #### 2.1 Document Upload & Facts Intake
 **User Story:** "As an attorney, I want to upload source documents and generate a draft demand letter"
 
-- [ ] Create `IntakePage` component
-- [ ] Build file upload component (drag-and-drop + click to upload)
-  - [ ] Support PDF and DOCX files
-  - [ ] Show file preview/name after upload
-  - [ ] Display file size and type
-  - [ ] Allow multiple file uploads
-- [ ] Create facts input form with fields:
-  - [ ] Parties (plaintiff, defendant, plaintiff_attorney)
-  - [ ] Incident description (textarea with character count)
-  - [ ] Venue (text input)
-  - [ ] Damages (amount_claimed, specials, generals)
-  - [ ] Optional: Damage breakdown (dynamic list)
-- [ ] Add form validation (Zod or Yup)
-- [ ] Implement "Submit Facts" button → POST `/v1/intake`
-- [ ] Handle multipart/form-data for file uploads
-- [ ] Display success message with `facts_id`
-- [ ] Show loading spinner during upload/processing
+- [x] Create `IntakePage` component
+- [x] Build file upload component (drag-and-drop + click to upload)
+  - [x] Support PDF and DOCX files
+  - [x] Show file preview/name after upload
+  - [x] Display file size and type
+  - [x] Allow multiple file uploads
+- [x] Create facts input form with fields:
+  - [x] Parties (plaintiff, defendant, plaintiff_attorney)
+  - [x] Incident description (textarea with character count)
+  - [x] Venue (text input)
+  - [x] Damages (amount_claimed, specials, generals)
+  - [x] Optional: Damage breakdown (dynamic list)
+- [x] Add form validation (Zod or Yup)
+- [x] Implement "Submit Facts" button → POST `/v1/intake`
+- [x] Handle multipart/form-data for file uploads
+- [x] Display success message with `facts_id`
+- [x] Show loading spinner during upload/processing
 
 #### 2.2 Draft Generation
 **User Story:** "Generate a draft demand letter using AI"
 
-- [ ] Create `GeneratePage` component (or modal)
-- [ ] Display submitted facts summary (read-only)
-- [ ] Add "Generate Draft" button → POST `/v1/generate`
-- [ ] Show generation progress indicator (with estimated time: ~15s)
-- [ ] Display generated draft in markdown preview
-- [ ] Show metadata: version, generated_at, issues
-- [ ] Add "Regenerate" button for new versions
-- [ ] Display version history (v1, v2, v3...)
+- [x] Create `GeneratePage` component (or modal)
+- [x] Display submitted facts summary (read-only)
+- [x] Add "Generate Draft" button → POST `/v1/generate`
+- [x] Show generation progress indicator (with estimated time: ~15s)
+- [x] Display generated draft in markdown preview
+- [x] Show metadata: version, generated_at, issues
+- [x] Add "Regenerate" button for new versions
+- [x] Display version history (v1, v2, v3...)
 
 #### 2.3 Draft Editor & Preview
 **User Story:** "Edit and refine the demand letter"
 
-- [ ] Create `DraftEditor` component
-- [ ] Implement markdown editor (react-markdown-editor-lite or similar)
-- [ ] Add rich text formatting toolbar
-- [ ] Show live preview of formatted letter
-- [ ] Add "Save Draft" functionality (local state or API)
-- [ ] Implement undo/redo functionality
-- [ ] Add word count and character count
+- [x] Create `DraftEditor` component
+- [x] Implement markdown editor (react-markdown-editor-lite or similar)
+- [x] Add rich text formatting toolbar
+- [x] Show live preview of formatted letter
+- [x] Add "Save Draft" functionality (local state or API)
+- [x] Implement undo/redo functionality
+- [x] Add word count and character count
 
-### Phase 3: Export to Google Docs (P0 - Demo Critical)
+### Phase 3: Export to Google Docs (P0 - Demo Critical) - COMPLETED
 
 #### 3.1 Google Drive Integration
 **User Story:** "Export the final demand letter to Google Docs for collaboration"
 
-- [ ] Set up Google OAuth 2.0 client (Google Cloud Console)
-- [ ] Add Google Drive API and Google Docs API scopes
-- [ ] Create `GoogleAuthButton` component
-- [ ] Implement OAuth flow (popup or redirect)
-- [ ] Store access token securely (session storage or state)
-- [ ] Add "Export to Google Docs" button on draft page
+- [x] Set up Google OAuth 2.0 client (Google Cloud Console) - Manual setup required
+- [x] Add Google Drive API and Google Docs API scopes
+- [x] Create `GoogleAuthButton` component
+- [x] Implement OAuth flow (popup or redirect)
+- [x] Store access token securely (session storage or state)
+- [x] Add "Export to Google Docs" button on draft page
 
 #### 3.2 Export Functionality
-- [ ] Create `exportToGoogleDocs` service function
-- [ ] Convert markdown draft to Google Docs format
-  - [ ] Use Google Docs API `documents.create`
-  - [ ] Map markdown headings to Google Docs styles
-  - [ ] Preserve formatting (bold, italic, lists)
-- [ ] Create document in user's Google Drive
-- [ ] Add document metadata (title: "Demand Letter - [Plaintiff] v [Defendant]")
-- [ ] Return shareable link to created document
-- [ ] Display success modal with link to open in Google Docs
-- [ ] Add "Copy Link" button for easy sharing
+- [x] Create `exportToGoogleDocs` service function
+- [x] Convert markdown draft to Google Docs format
+  - [x] Use Google Docs API `documents.create`
+  - [x] Map markdown headings to Google Docs styles
+  - [x] Preserve formatting (bold, italic, lists)
+- [x] Create document in user's Google Drive
+- [x] Add document metadata (title: "Demand Letter - [Plaintiff] v [Defendant]")
+- [x] Return shareable link to created document
+- [x] Display success modal with link to open in Google Docs
+- [x] Add "Copy Link" button for easy sharing
 
 #### 3.3 Post-Export Actions
-- [ ] Show "Open in Google Docs" button (opens in new tab)
-- [ ] Display sharing instructions (invite collaborators, comment, etc.)
-- [ ] Add option to export to DOCX as fallback (existing API endpoint)
+- [x] Show "Open in Google Docs" button (opens in new tab)
+- [x] Display sharing instructions (invite collaborators, comment, etc.)
+- [x] Add option to export to DOCX as fallback (existing API endpoint)
+
+#### 3.4 Google Cloud Console Setup (Manual Steps Required)
+- [ ] Create Google Cloud project
+- [ ] Enable Google Docs API and Google Drive API
+- [ ] Configure OAuth consent screen with required scopes
+- [ ] Create OAuth 2.0 credentials (Web application)
+- [ ] Add authorized JavaScript origins (localhost:3000)
+- [ ] Copy Client ID to `.env.local` as `NEXT_PUBLIC_GOOGLE_CLIENT_ID`
 
 ### Phase 4: Template Management (P0)
 
@@ -686,18 +697,13 @@ Build a React-based web application for the Steno Demand Letter Generator that a
 
 ### Phase 7: Advanced Features (P2 - Nice to Have)
 
-#### 7.1 Real-time Collaboration Prep
-- [ ] Add WebSocket connection setup (for future real-time editing)
-- [ ] Implement optimistic UI updates
-- [ ] Add conflict resolution UI (if multiple users edit)
-
-#### 7.2 Critic Pass Integration
+#### 7.1 Critic Pass Integration
 - [ ] Add "Review Draft" button → POST `/v1/critic`
 - [ ] Display AI-identified issues in sidebar
 - [ ] Highlight problematic sections in editor
 - [ ] Add "Resolve" button for each issue
 
-#### 7.3 Metrics & Analytics
+#### 7.2 Metrics & Analytics
 - [ ] Add analytics tracking (Plausible or similar)
 - [ ] Track: letters generated, export method, generation time
 - [ ] Create admin dashboard for usage stats
@@ -742,13 +748,14 @@ Build a React-based web application for the Steno Demand Letter Generator that a
 
 **Must Have for Demo:**
 - [x] Backend API running and tested
-- [ ] Landing page with clear value proposition
-- [ ] Intake form with file upload (PDF/DOCX)
-- [ ] Generate button that shows loading state
-- [ ] Draft preview with markdown rendering
-- [ ] Export to Google Docs button (working OAuth flow)
-- [ ] Success modal showing Google Docs link
-- [ ] Basic styling (professional, clean)
+- [x] Landing page with clear value proposition
+- [x] Intake form with file upload (PDF/DOCX)
+- [x] Generate button that shows loading state
+- [x] Draft preview with markdown rendering
+- [x] Export to Google Docs button (OAuth flow implemented)
+- [x] Success modal showing Google Docs link
+- [x] Basic styling (professional, clean)
+- [ ] Google Cloud Console configured (manual setup required)
 
 **Demo Script:**
 1. **Intro:** "This is Steno's Demand Letter Generator"
