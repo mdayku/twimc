@@ -2,7 +2,7 @@
 
 ## Top Priorities
 
-1) Configure AWS Bedrock access and set ENV variables (API tokens, model, region)
+1) ✅ Configure LLM provider and set ENV variables (OpenAI API key or AWS Bedrock)
 2) ✅ Implement ability to restore previous draft versions
 3) ✅ Include "why included" notes for major clauses in response
 4) ✅ Implement critic pass to check factual support for each claim
@@ -22,10 +22,11 @@
 - Added draft version restore functionality (PUT /v1/drafts/:facts_id/:version/restore)
 - Enhanced generate responses with explanations for why major legal sections were included
 - Added critic pass: AI reviews drafts for factual accuracy and identifies unsupported claims
+- Added LLM provider abstraction: Support for both OpenAI and AWS Bedrock with simple env flag switch
 
 ## Overview
 
-Steno is an AI-powered legal document generator that helps attorneys and paralegals create professional demand letters quickly and accurately. The system ingests case facts and generates structured legal documents using AWS Bedrock (Claude Sonnet), with export to Word format for final editing.
+Steno is an AI-powered legal document generator that helps attorneys and paralegals create professional demand letters quickly and accurately. The system ingests case facts and generates structured legal documents using either OpenAI GPT models or AWS Bedrock (Claude Sonnet), with export to Word format for final editing.
 
 ### Core Flow
 1. **Intake**: Attorney/paralegal provides case facts (parties, incident, damages, venue)

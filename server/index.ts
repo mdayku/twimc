@@ -1,13 +1,15 @@
-import Fastify from 'fastify'
 import dotenv from 'dotenv'
-import { generateWithBedrock } from './bedrock.js'
+
+dotenv.config({ path: '../.env' })
+
+import Fastify from 'fastify'
 import { markdownToDocxBuffer } from './docx.js'
 import multipart from '@fastify/multipart'
+import { createHash } from 'crypto'
 import type { MultipartFile } from '@fastify/multipart'
 import { randomUUID } from 'crypto'
 import { recordRequestDuration } from './metrics.js'
-
-dotenv.config({ path: '../.env' })
+import { LlmClient } from './llm/provider.js'
 
 const app = Fastify({ 
   logger: {
@@ -23,40 +25,6 @@ await app.register(multipart, {
     files: 5
   }
 })
-
-// Initialize templates (load from filesystem for MVP)
-async function initializeTemplates() {
-  try {
-    const fs = await import('fs/promises')
-    const path = await import('path')
-
-    // Load generic demand template
-    const genericTemplatePath = path.join(process.cwd(), '..', 'data', 'templates', 'generic_demand.md')
-    const genericContent = await fs.readFile(genericTemplatePath, 'utf-8')
-
-    const now = new Date().toISOString()
-    const genericTemplate: TemplateRecord = {
-      id: 'generic-demand',
-      name: 'Generic Demand Letter',
-      description: 'Standard demand letter template with sections for introduction, facts, liability, damages, and demand',
-      content: genericContent,
-      jurisdiction: 'General',
-      firm_style: {
-        tone: 'professional and firm'
-      },
-      created_at: now,
-      updated_at: now
-    }
-
-    templatesStore.set(genericTemplate.id, genericTemplate)
-    console.log('✅ Loaded generic demand template')
-  } catch (error) {
-    console.warn('⚠️  Could not load generic template:', error instanceof Error ? error.message : String(error))
-  }
-}
-
-// Initialize templates on startup
-await initializeTemplates()
 
 // Simple Bearer token auth for all /v1/* endpoints (MVP)
 const API_TOKENS = (process.env.API_TOKENS || process.env.API_TOKEN || '')
@@ -139,6 +107,54 @@ let factsIdCounter = 1
 // Template store (in-memory for MVP)
 const templatesStore = new Map<string, TemplateRecord>()
 
+// Initialize templates (load from filesystem for MVP)
+async function initializeTemplates() {
+  try {
+    const fs = await import('fs/promises')
+    const path = await import('path')
+
+    // Load generic demand template
+    const genericTemplatePath = path.join(process.cwd(), '..', 'data', 'templates', 'generic_demand.md')
+    const genericContent = await fs.readFile(genericTemplatePath, 'utf-8')
+
+    const now = new Date().toISOString()
+    const genericTemplate: TemplateRecord = {
+      id: 'generic-demand',
+      name: 'Generic Demand Letter',
+      description: 'Standard demand letter template with sections for introduction, facts, liability, damages, and demand',
+      content: genericContent,
+      jurisdiction: 'General',
+      firm_style: {
+        tone: 'professional and firm'
+      },
+      created_at: now,
+      updated_at: now
+    }
+
+    templatesStore.set(genericTemplate.id, genericTemplate)
+    console.log('✅ Loaded generic demand template')
+  } catch (error) {
+    console.warn('⚠️  Could not load generic template:', error instanceof Error ? error.message : String(error))
+  }
+}
+
+// Initialize templates on startup
+await initializeTemplates()
+
+// Initialize LLM client based on provider selection
+let llmClient: LlmClient
+const provider = process.env.LLM_PROVIDER || 'bedrock'
+
+if (provider === 'openai') {
+  const { OpenAILlmClient } = await import('./llm/openai.js')
+  llmClient = new OpenAILlmClient()
+} else {
+  const { BedrockLlmClient } = await import('./llm/bedrock.js')
+  llmClient = new BedrockLlmClient()
+}
+
+console.log(`✅ Initialized ${provider.toUpperCase()} LLM client`)
+
 // Utility function to generate change log between drafts
 function generateChangeLog(oldDraft: string, newDraft: string): string[] {
   const changes: string[] = []
@@ -191,7 +207,7 @@ function generateChangeLog(oldDraft: string, newDraft: string): string[] {
 // Generate hash of inputs for change detection
 function generateInputHash(facts: any, templateMd?: string, firmStyle?: any): string {
   const input = JSON.stringify({ facts, templateMd, firmStyle })
-  return require('crypto').createHash('md5').update(input).digest('hex')
+  return createHash('md5').update(input).digest('hex')
 }
 
 async function bufferFromFile(file: MultipartFile): Promise<Buffer> {
@@ -308,7 +324,7 @@ app.post('/v1/generate', async (req, rep) => {
   }
 
   try {
-    const { draft_md, issues, explanations } = await generateWithBedrock(facts, effectiveTemplateMd, effectiveFirmStyle)
+    const { draft_md, issues, explanations, input_tokens, output_tokens } = await llmClient.generateDraft(facts, effectiveTemplateMd, effectiveFirmStyle)
 
     // Create new draft version
     const inputHash = generateInputHash(facts, effectiveTemplateMd, effectiveFirmStyle)

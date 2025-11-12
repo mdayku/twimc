@@ -20,8 +20,9 @@ AI-powered legal document generator that helps attorneys and paralegals create p
 ### Prerequisites
 
 - Node.js 18+ and npm/pnpm
-- AWS account with Bedrock access (Claude Sonnet model enabled)
-- AWS credentials configured (via `~/.aws/credentials` or environment variables)
+- **Choose one LLM provider:**
+  - **OpenAI**: OpenAI API key (recommended for simplicity)
+  - **AWS Bedrock**: AWS account with Bedrock access (Claude Sonnet model enabled) + AWS credentials configured
 
 ### Setup
 
@@ -32,11 +33,28 @@ npm install
 
 # 2. Configure environment
 cp ../.env .env  # or create from .env.example
-# Edit .env and set:
-#   BEDROCK_REGION=us-east-1
-#   BEDROCK_MODEL_ID=anthropic.claude-3-5-sonnet-20241022-v2:0
-#   (optional) BEDROCK_GUARDRAILS_ID=grd-xxxxxxxx
-#   API_TOKEN=dev-token-123              # or API_TOKENS=token1,token2
+# Edit .env and choose ONE provider:
+
+# ===========================================
+# OPTION 1: OpenAI (Recommended - simpler setup)
+# ===========================================
+LLM_PROVIDER=openai
+OPENAI_API_KEY=sk-your-openai-api-key-here
+OPENAI_MODEL_ID=gpt-4  # or gpt-3.5-turbo for cheaper
+# OPENAI_BASE_URL=  # optional, for Azure/compat endpoints
+
+# ===========================================
+# OPTION 2: AWS Bedrock (Advanced - more complex setup)
+# ===========================================
+# LLM_PROVIDER=bedrock
+# BEDROCK_REGION=us-east-1
+# BEDROCK_MODEL_ID=anthropic.claude-3-5-sonnet-20241022-v2:0
+# (optional) BEDROCK_GUARDRAILS_ID=grd-xxxxxxxx
+
+# ===========================================
+# Common Settings
+# ===========================================
+API_TOKEN=dev-token-123  # or API_TOKENS=token1,token2
 
 # 3. Run the server
 npm run dev
