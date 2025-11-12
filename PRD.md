@@ -327,7 +327,7 @@ open('data/facts_seed.json','w',encoding='utf-8').write(json.dumps(rows, indent=
 **Acceptance Test**: Export generated draft, open in Word, verify formatting
 
 ### 4. Performance
-- [ ] p95 end-to-end latency < 5s for ~2-page facts input (with Bedrock)
+- [x] p95 end-to-end latency < 5s for ~2-page facts input (with Bedrock)
 - [x] Health endpoint responds in < 100ms
 - [x] DOCX export completes in < 2s for typical letter
 

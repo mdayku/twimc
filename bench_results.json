@@ -1,0 +1,13 @@
+﻿{
+    "p95_ms":  3304.69,
+    "timestamp":  {
+                      "value":  "\/Date(1762969515455)\/",
+                      "DisplayHint":  2,
+                      "DateTime":  "Wednesday, November 12, 2025 11:45:15 AM"
+                  },
+    "target_met":  true,
+    "fails":  0,
+    "successes":  5,
+    "max_ms":  3304.69,
+    "avg_ms":  1554.42
+}
