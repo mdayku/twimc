@@ -2,12 +2,23 @@ import Fastify from 'fastify'
 import dotenv from 'dotenv'
 import { generateWithBedrock } from './bedrock.js'
 import { markdownToDocxBuffer } from './docx.js'
+import multipart from '@fastify/multipart'
+import type { MultipartFile } from '@fastify/multipart'
 
 dotenv.config({ path: '../.env' })
 
 const app = Fastify({ 
   logger: {
     level: process.env.LOG_LEVEL || 'info'
+  }
+})
+
+// Register multipart for attachments (MVP limits)
+await app.register(multipart, {
+  attachFieldsToBody: false,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10 MB per file
+    files: 5
   }
 })
 
@@ -35,6 +46,14 @@ app.addHook('onRequest', async (req, rep) => {
 const factsStore = new Map<string, any>()
 let factsIdCounter = 1
 
+async function bufferFromFile(file: MultipartFile): Promise<Buffer> {
+  const chunks: Buffer[] = []
+  for await (const chunk of file.file) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+  }
+  return Buffer.concat(chunks)
+}
+
 // Health check
 app.get('/health', async () => {
   return { status: 'ok', timestamp: new Date().toISOString() }
@@ -42,8 +61,51 @@ app.get('/health', async () => {
 
 // Intake endpoint - persist facts and return ID
 app.post('/v1/intake', async (req, rep) => {
-  const { facts_json, attachments } = (req.body as any) || {}
-  
+  const receivedAt = new Date().toISOString()
+
+  // Handle multipart (file uploads) and JSON bodies
+  let facts_json: any = undefined
+  let attachmentsMeta: Array<{ filename: string; mimetype: string; size: number }> = []
+  let attachmentsRaw: Array<{ filename: string; mimetype: string; buffer: Buffer }> = []
+
+  if ((req as any).isMultipart && (req as any).isMultipart()) {
+    for await (const part of (req as any).parts()) {
+      if (part.type === 'file') {
+        const filePart = part as MultipartFile
+        const buf = await bufferFromFile(filePart)
+        attachmentsMeta.push({
+          filename: filePart.filename || 'unnamed',
+          mimetype: filePart.mimetype || 'application/octet-stream',
+          size: buf.length
+        })
+        // Store raw for MVP; in production, move to object storage
+        attachmentsRaw.push({
+          filename: filePart.filename || 'unnamed',
+          mimetype: filePart.mimetype || 'application/octet-stream',
+          buffer: buf
+        })
+      } else if (part.type === 'field') {
+        if (part.fieldname === 'facts_json') {
+          try {
+            facts_json = JSON.parse(part.value as string)
+          } catch {
+            return rep.code(400).send({ error: 'facts_json must be valid JSON string in multipart form' })
+          }
+        }
+      }
+    }
+  } else {
+    const { facts_json: fj, attachments } = (req.body as any) || {}
+    facts_json = fj
+    if (Array.isArray(attachments)) {
+      attachmentsMeta = attachments.map((a: any) => ({
+        filename: String(a?.filename || 'unnamed'),
+        mimetype: String(a?.mimetype || 'application/octet-stream'),
+        size: Number(a?.size || 0)
+      }))
+    }
+  }
+
   if (!facts_json) {
     return rep.code(400).send({ error: 'facts_json is required' })
   }
@@ -51,12 +113,13 @@ app.post('/v1/intake', async (req, rep) => {
   const factsId = `facts_${factsIdCounter++}`
   factsStore.set(factsId, {
     facts_json,
-    attachments: attachments || [],
-    created_at: new Date().toISOString()
+    attachments_meta: attachmentsMeta,
+    attachments_raw: attachmentsRaw, // only present for multipart uploads
+    created_at: receivedAt
   })
 
-  app.log.info({ factsId }, 'Facts stored')
-  return { facts_id: factsId }
+  app.log.info({ factsId, receivedAt, attachments_count: attachmentsMeta.length }, 'Facts stored')
+  return { facts_id: factsId, attachments: attachmentsMeta, created_at: receivedAt }
 })
 
 // Generate endpoint - produce draft from facts
