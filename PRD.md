@@ -22,15 +22,18 @@
 8) ✅ Set up Google OAuth 2.0 integration (Cloud Console, Drive API, Docs API) - COMPLETED
 9) ✅ Implement export to Google Docs with markdown conversion - COMPLETED
 
-### Remaining Tasks (In Progress 🚧)
+### Remaining Tasks (Ready for Deployment! 🚀)
 1) ✅ Create templates page (list, create, edit, preview) - COMPLETED
 2) ✅ Build draft history page with version timeline - COMPLETED
 3) ✅ Add UI polish (design system, toast notifications, accessibility) - COMPLETED
 4) ✅ Fix all ESLint warnings and TypeScript errors - COMPLETED
-5) 🚧 Deploy frontend to Vercel with environment variables - IN PROGRESS
-6) 🚧 Configure Google Cloud Console (manual setup after Vercel deployment) - PENDING
+5) ✅ Configure monorepo deployment (frontend + backend together) - COMPLETED
+6) 🚧 Deploy to Vercel (manual: `vercel` command) - READY
+7) 🚧 Configure Google Cloud Console (manual setup after Vercel deployment) - PENDING
 
 ### Recent Changes
+- ✅ **Monorepo Deployment**: Configured Vercel to deploy frontend + backend together on same domain (no CORS!)
+- ✅ **Serverless Ready**: Refactored backend to work as Vercel serverless functions
 - ✅ **Code Quality**: All ESLint warnings fixed, TypeScript errors resolved, production build successful
 - ✅ **Frontend Complete**: Templates page, history page, UI polish, Google Docs integration all implemented
 - ✅ **Testing Suite Complete**: All unit tests (schema, PII, DOCX, fallback), integration tests (e2e, error handling), and provider tests passing
