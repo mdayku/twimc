@@ -776,30 +776,35 @@ app.post('/v1/export/docx', async (req, rep) => {
   }
 })
 
-// Start server
-const port = parseInt(process.env.PORT || '8787', 10)
-const host = '0.0.0.0'
+// Export app for Vercel serverless or testing
+export { app }
 
-app.listen({ port, host }, (err, address) => {
-  if (err) {
-    app.log.error(err)
-    process.exit(1)
-  }
-  app.log.info(`Server listening at ${address}`)
-})
+// Only start server if not in Vercel environment
+if (!process.env.VERCEL) {
+  const port = parseInt(process.env.PORT || '8787', 10)
+  const host = '0.0.0.0'
 
-// Graceful shutdown
-process.on('SIGINT', async () => {
-  app.log.info('Shutting down gracefully...')
-  await app.close()
-  await closeDb()
-  process.exit(0)
-})
+  app.listen({ port, host }, (err, address) => {
+    if (err) {
+      app.log.error(err)
+      process.exit(1)
+    }
+    app.log.info(`Server listening at ${address}`)
+  })
 
-process.on('SIGTERM', async () => {
-  app.log.info('Shutting down gracefully...')
-  await app.close()
-  await closeDb()
-  process.exit(0)
-})
+  // Graceful shutdown
+  process.on('SIGINT', async () => {
+    app.log.info('Shutting down gracefully...')
+    await app.close()
+    await closeDb()
+    process.exit(0)
+  })
+
+  process.on('SIGTERM', async () => {
+    app.log.info('Shutting down gracefully...')
+    await app.close()
+    await closeDb()
+    process.exit(0)
+  })
+}
 

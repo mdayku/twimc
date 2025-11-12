@@ -22,7 +22,9 @@
 2. **GitHub Repository**: Code is already pushed to `https://github.com/mdayku/twimc.git`
 3. **Environment Variables**: You'll need to configure these in Vercel
 
-## Step 1: Deploy Frontend to Vercel
+## Step 1: Deploy Full Stack to Vercel (Monorepo)
+
+The project is configured as a monorepo with both frontend and backend deploying together!
 
 ### Option A: Deploy via Vercel CLI (Recommended)
 
@@ -36,9 +38,8 @@
    vercel login
    ```
 
-3. **Deploy from the client directory**:
+3. **Deploy from the root directory**:
    ```bash
-   cd client
    vercel
    ```
 
@@ -46,20 +47,40 @@
    - Set up and deploy? **Y**
    - Which scope? Select your account
    - Link to existing project? **N**
-   - Project name? **twimc-client** (or your preferred name)
-   - In which directory is your code located? **.**
+   - Project name? **twimc** (or your preferred name)
+   - In which directory is your code located? **./** (root)
    - Want to override settings? **N**
 
-5. **Set environment variables**:
+5. **Set environment variables** (for both frontend and backend):
    ```bash
+   # Frontend variables
    vercel env add NEXT_PUBLIC_API_BASE_URL
-   # Enter: http://localhost:8787 (for now, will update after backend deployment)
+   # Enter: /api (relative path - same domain!)
    
    vercel env add NEXT_PUBLIC_API_TOKEN
    # Enter: dev-token-123 (or your actual API token)
    
    vercel env add NEXT_PUBLIC_GOOGLE_CLIENT_ID
    # Enter: your-google-client-id-here (will update after Google Cloud setup)
+   
+   # Backend variables
+   vercel env add DATABASE_URL
+   # Enter: your Neon PostgreSQL connection string
+   
+   vercel env add OPENAI_API_KEY
+   # Enter: your OpenAI API key
+   
+   vercel env add OPENAI_MODEL_ID
+   # Enter: gpt-4o
+   
+   vercel env add LLM_PROVIDER
+   # Enter: openai
+   
+   vercel env add API_TOKENS
+   # Enter: dev-token-123 (or your secure token)
+   
+   vercel env add LOG_LEVEL
+   # Enter: info
    ```
 
 6. **Deploy to production**:
@@ -72,59 +93,18 @@
 1. Go to [vercel.com/new](https://vercel.com/new)
 2. Import your GitHub repository: `mdayku/twimc`
 3. Configure project:
-   - **Framework Preset**: Next.js
-   - **Root Directory**: `client`
+   - **Framework Preset**: Other (monorepo detected automatically)
+   - **Root Directory**: `./` (leave as root)
    - **Build Command**: `npm run build`
-   - **Output Directory**: `.next`
-4. Add environment variables:
-   - `NEXT_PUBLIC_API_BASE_URL` = `http://localhost:8787` (temporary)
-   - `NEXT_PUBLIC_API_TOKEN` = `dev-token-123`
-   - `NEXT_PUBLIC_GOOGLE_CLIENT_ID` = `your-google-client-id-here` (temporary)
+4. Add environment variables (see list above in Option A, step 5)
 5. Click **Deploy**
 
-## Step 2: Deploy Backend (Optional - for production)
+**Note:** With this setup:
+- Frontend is accessible at `https://your-app.vercel.app`
+- Backend API is at `https://your-app.vercel.app/api/v1/*`
+- No CORS issues since they're on the same domain!
 
-### Option A: Deploy Backend to Vercel
-
-1. **Create a new Vercel project for the backend**:
-   ```bash
-   cd ../server
-   vercel
-   ```
-
-2. **Configure as Node.js project**:
-   - Set environment variables in Vercel dashboard:
-     - `DATABASE_URL`
-     - `OPENAI_API_KEY`
-     - `OPENAI_MODEL_ID`
-     - `LLM_PROVIDER`
-     - `API_TOKENS`
-     - `LOG_LEVEL`
-
-3. **Add `vercel.json` to server directory**:
-   ```json
-   {
-     "version": 2,
-     "builds": [
-       {
-         "src": "index.ts",
-         "use": "@vercel/node"
-       }
-     ],
-     "routes": [
-       {
-         "src": "/(.*)",
-         "dest": "index.ts"
-       }
-     ]
-   }
-   ```
-
-### Option B: Keep Backend Local (For Demo)
-
-If you're just demoing, you can keep the backend running locally on `http://localhost:8787` and update the frontend's `NEXT_PUBLIC_API_BASE_URL` to point to your local machine's IP address (if accessing from other devices) or use a tunnel service like ngrok.
-
-## Step 3: Configure Google Cloud Console
+## Step 2: Configure Google Cloud Console
 
 **Note**: Do this AFTER deploying to Vercel, as you'll need the deployed URL.
 
@@ -177,22 +157,7 @@ If you're just demoing, you can keep the backend running locally on `http://loca
    vercel --prod
    ```
 
-## Step 4: Update Backend URL (if deployed)
-
-If you deployed the backend to Vercel or another service:
-
-1. **Update frontend environment variable**:
-   ```bash
-   vercel env add NEXT_PUBLIC_API_BASE_URL production
-   # Enter your backend URL (e.g., https://twimc-server.vercel.app)
-   ```
-
-2. **Redeploy frontend**:
-   ```bash
-   vercel --prod
-   ```
-
-## Step 5: Test the Deployment
+## Step 3: Test the Deployment
 
 1. Visit your Vercel URL (e.g., `https://twimc-client.vercel.app`)
 2. Test the intake form at `/new`
@@ -203,9 +168,9 @@ If you deployed the backend to Vercel or another service:
 ## Troubleshooting
 
 ### Frontend can't connect to backend
-- Check `NEXT_PUBLIC_API_BASE_URL` is set correctly
-- Ensure backend is running and accessible
-- Check CORS settings if backend is on different domain
+- Check `NEXT_PUBLIC_API_BASE_URL` is set to `/api` (relative path)
+- Verify backend environment variables are set in Vercel
+- Check Vercel function logs for errors
 
 ### Google OAuth not working
 - Verify `NEXT_PUBLIC_GOOGLE_CLIENT_ID` is set
@@ -218,15 +183,14 @@ If you deployed the backend to Vercel or another service:
 
 ## Production Checklist
 
-- [ ] Frontend deployed to Vercel
-- [ ] Backend deployed (or running locally with tunnel)
+- [ ] Full stack deployed to Vercel (frontend + backend together)
+- [ ] All environment variables set in Vercel (frontend and backend)
 - [ ] Google Cloud project created
 - [ ] Google Drive & Docs APIs enabled
 - [ ] OAuth consent screen configured
-- [ ] OAuth credentials created
-- [ ] Environment variables set in Vercel
+- [ ] OAuth credentials created with Vercel URL
 - [ ] Test all features end-to-end
-- [ ] Update `NEXT_PUBLIC_API_TOKEN` to a secure token (not `dev-token-123`)
+- [ ] Update `API_TOKENS` to a secure token (not `dev-token-123`)
 - [ ] Set up custom domain (optional)
 
 ## 🎯 Demo Scenario

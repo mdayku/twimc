@@ -1,0 +1,32 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "builds": [
+    {
+      "src": "client/package.json",
+      "use": "@vercel/next"
+    },
+    {
+      "src": "server/vercel-handler.ts",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["server/**"]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/v1/(.*)",
+      "dest": "server/vercel-handler.ts"
+    },
+    {
+      "src": "/health",
+      "dest": "server/vercel-handler.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "client/$1"
+    }
+  ]
+}
+

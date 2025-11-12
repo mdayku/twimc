@@ -1,204 +1,201 @@
-# Steno — Demand Letter Generator
+# Steno Demand Letter Generator
 
-AI-powered legal document generator that helps attorneys and paralegals create professional demand letters quickly and accurately. **Fact-based only** - no hallucinations, all assertions must be supported by provided evidence.
+AI-powered demand letter drafting tool for law firms. Generate professional demand letters in seconds using GPT-4o, with support for custom templates, document uploads, and Google Docs export.
 
-## Core Features
+## 🚀 Features
 
-- ✅ **Structured Legal Documents**: Consistent format with all mandatory sections (introduction, facts, liability, damages, demand)
-- ✅ **AI-Powered Generation**: OpenAI (default) or AWS Bedrock via provider flag
-- ✅ **Professional Export**: DOCX format with proper legal document formatting
-- ✅ **Fast Iteration**: <5s p95 generation for typical 2-page demand letters
-- ✅ **Attachments + Extraction**: Upload PDF/DOCX; auto-extract and merge key facts
+- **AI-Powered Generation**: Uses OpenAI GPT-4o to draft professional demand letters
+- **Document Upload**: Extract facts from PDF/DOCX files automatically
+- **Custom Templates**: Create firm-specific templates with your style and jurisdiction
+- **Version History**: Track multiple drafts with automatic change logs
+- **Google Docs Export**: Export to Google Docs for collaboration and comments
+- **DOCX Export**: Download as Word documents for official use
+- **Mobile Responsive**: Works on desktop, tablet, and mobile devices
 
-## Demo Flow
+## 📋 Tech Stack
 
-1. **Intake**: Provide case facts (parties, incident, damages, venue)
-2. **Generate**: AI produces structured demand letter draft
-3. **Edit & Export**: Review, edit, and export to DOCX
+**Frontend:**
+- Next.js 14 (App Router)
+- React 18
+- TypeScript
+- Tailwind CSS
+- shadcn/ui components
 
-## Quick Start
+**Backend:**
+- Fastify (Node.js)
+- TypeScript
+- PostgreSQL (Neon)
+- OpenAI GPT-4o API
+- AWS Bedrock (optional)
+
+**Deployment:**
+- Vercel (full stack monorepo)
+- Neon PostgreSQL
+
+## 🏃 Quick Start
 
 ### Prerequisites
 
-- Node.js 18+ and npm/pnpm
-- **Choose one LLM provider:**
-  - **OpenAI**: OpenAI API key (recommended for simplicity)
-  - **AWS Bedrock**: AWS account with Bedrock access (Claude Sonnet model enabled) + AWS credentials configured
+- Node.js 18+
+- PostgreSQL database (Neon recommended)
+- OpenAI API key
 
-### Setup
+### Local Development
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/mdayku/twimc.git
+   cd twimc
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**:
+   
+   Create `.env` in the root directory:
+   ```env
+   # Database
+   DATABASE_URL=postgresql://...
+   
+   # OpenAI
+   OPENAI_API_KEY=sk-...
+   OPENAI_MODEL_ID=gpt-4o
+   LLM_PROVIDER=openai
+   
+   # API Auth
+   API_TOKENS=dev-token-123
+   
+   # Logging
+   LOG_LEVEL=info
+   
+   # Frontend (for local dev)
+   NEXT_PUBLIC_API_BASE_URL=http://localhost:8787
+   NEXT_PUBLIC_API_TOKEN=dev-token-123
+   NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id-here
+   ```
+
+4. **Run database migrations**:
+   ```bash
+   cd server
+   npm run dev
+   # Migrations run automatically on startup
+   ```
+
+5. **Start development servers**:
+   ```bash
+   # From root directory
+   npm run dev
+   
+   # This runs both:
+   # - Backend: http://localhost:8787
+   # - Frontend: http://localhost:3000
+   ```
+
+6. **Open your browser**:
+   ```
+   http://localhost:3000
+   ```
+
+## 🚀 Deployment
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
+
+**Quick Deploy to Vercel:**
 
 ```bash
-# 1. Install dependencies
-cd server
-npm install
-
-# 2. Configure environment
-cp ../.env .env  # or create from .env.example
-# Edit .env and choose ONE provider (OpenAI is recommended default):
-
-# ===========================================
-# OPTION 1: OpenAI (Recommended - simpler setup)
-# ===========================================
-LLM_PROVIDER=openai
-OPENAI_API_KEY=sk-your-openai-api-key-here
-OPENAI_MODEL_ID=gpt-4  # or gpt-4o / gpt-5 if enabled
-# OPENAI_BASE_URL=  # optional, for Azure/compat endpoints
-
-# ===========================================
-# OPTION 2: AWS Bedrock (Advanced - more complex setup)
-# ===========================================
-# LLM_PROVIDER=bedrock
-# BEDROCK_REGION=us-east-1
-# BEDROCK_MODEL_ID=anthropic.claude-3-5-sonnet-20241022-v2:0
-# (optional) BEDROCK_GUARDRAILS_ID=grd-xxxxxxxx
-
-# ===========================================
-# Common Settings
-# ===========================================
-API_TOKEN=dev-token-123  # or API_TOKENS=token1,token2
-
-# 3. Run the server
-npm run dev
+vercel login
+vercel
+# Follow prompts and set environment variables
+vercel --prod
 ```
 
-The API will be available at `http://localhost:8787`
+The monorepo configuration deploys both frontend and backend together on the same domain!
 
-### Test the API
+## 📖 API Documentation
 
-```bash
-# Health check
-curl http://localhost:8787/health
+### Endpoints
 
-# Generate a demand letter
-curl -X POST http://localhost:8787/v1/generate \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer dev-token-123" \
-  -d @../data/facts_seed.json
-
-# Export to DOCX
-curl -X POST http://localhost:8787/v1/export/docx \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer dev-token-123" \
-  -d '{"draft_md":"# Test Letter\n\nThis is a test."}' \
-  --output test.docx
-
-# Intake with multipart (attachments)
-curl -X POST http://localhost:8787/v1/intake \
-  -H "Authorization: Bearer dev-token-123" \
-  -F 'facts_json={"parties":{"plaintiff":"Consumer","defendant":"ACME"},"incident":"...","damages":{"amount_claimed":1000}}' \
-  -F "attachments=@path/to/evidence.pdf" \
-  -F "attachments=@path/to/medical_report.docx"
-# The server will automatically extract text from supported files (PDF/DOCX)
-# and merge incident details / damage amounts into facts when fields are missing.
-```
-
-## API Endpoints
-
+- `POST /v1/intake` - Submit case facts and attachments
+- `POST /v1/generate` - Generate demand letter draft
+- `GET /v1/drafts/:facts_id` - Get all drafts for a case
+- `POST /v1/restore/:facts_id` - Restore previous draft version
+- `POST /v1/export/docx` - Export draft to DOCX
+- `GET /v1/templates` - List all templates
+- `POST /v1/templates` - Create/update template
 - `GET /health` - Health check
-- `POST /v1/intake` - Store facts and return facts_id
-- `POST /v1/generate` - Generate draft from facts
-- `POST /v1/export/docx` - Export markdown to DOCX
+- `GET /metrics` - Performance metrics
 
-See [PRD.md](./PRD.md) for complete API specification.
+### Authentication
 
-## Project Structure
+All `/v1/*` endpoints require Bearer token authentication:
+
+```bash
+curl -H "Authorization: Bearer dev-token-123" \
+  http://localhost:8787/v1/generate
+```
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+npm test
+
+# Type checking
+npm run typecheck
+
+# Linting
+npm run lint
+```
+
+## 📁 Project Structure
 
 ```
 twimc/
-├── server/               # Node.js API server
-│   ├── index.ts          # Main Fastify server
-│   ├── docx.ts           # DOCX export
-│   ├── extract.ts        # PDF/DOCX text extraction
-│   ├── llm/              # LLM provider abstraction
-│   │   ├── provider.ts   # LlmClient interface
-│   │   ├── openai.ts     # OpenAI implementation (default)
-│   │   └── bedrock.ts    # AWS Bedrock implementation
-│   └── schema/           # Type definitions
-├── data/                # Data and templates
-│   ├── cfpb_importer.py # CFPB data converter
-│   ├── facts_seed.json  # Sample facts for testing
-│   ├── templates/       # Demand letter templates
-│   └── LICENSES.md      # Data provenance
-├── githooks/            # Git pre-commit hooks
-└── scripts/             # Utility scripts
+├── client/              # Next.js frontend
+│   ├── app/            # App router pages
+│   ├── components/     # React components
+│   ├── lib/           # API client and utilities
+│   └── types/         # TypeScript types
+├── server/             # Fastify backend
+│   ├── llm/           # LLM provider implementations
+│   ├── db/            # Database queries
+│   ├── migrations/    # SQL migrations
+│   ├── index.ts       # Main server
+│   └── vercel-handler.ts  # Vercel serverless adapter
+├── vercel.json        # Vercel monorepo config
+└── package.json       # Root workspace config
 ```
 
-## Development Workflow
+## 🎯 Demo Scenario
 
-### Typecheck
+1. Visit homepage and explore features
+2. Go to `/new` and create a new demand letter
+3. Upload a PDF/DOCX document (optional)
+4. Fill in case facts (plaintiff, defendant, incident, damages)
+5. Click "Generate Draft" (~15 seconds with GPT-4o)
+6. View the markdown-formatted draft
+7. Export to Google Docs or DOCX
+8. Check version history and templates
 
-```bash
-cd server
-npm run typecheck
-```
+## 🔒 Security
 
-### Using Justfile Commands
+- PII redaction in logs (emails, phone numbers, SSNs)
+- Rate limiting per API token
+- Bearer token authentication
+- Environment variable validation
+- SQL injection protection (parameterized queries)
 
-From project root:
+## 📝 License
 
-```bash
-just typecheck  # Run TypeScript compiler
-just ship       # Run full CI pipeline (typecheck + test + lint)
-```
+Proprietary - Steno
 
-### Pre-commit Hooks
+## 🤝 Contributing
 
-The repository includes pre-commit hooks that:
-- Block emojis in code
-- Run quick typecheck on changed TS files
-- Show existing files when adding new ones (avoid duplicates)
+This is a private project for Steno. Contact the team for access.
 
-Link hooks:
+## 📧 Support
 
-```bash
-# Windows (PowerShell as admin)
-New-Item -ItemType SymbolicLink -Path .git\hooks\pre-commit -Target ..\..\githooks\pre-commit
-
-# Unix/Mac
-ln -sf ../../githooks/pre-commit .git/hooks/pre-commit
-chmod +x .git/hooks/pre-commit
-```
-
-## Data Sources
-
-- **CFPB Consumer Complaint Database**: Public domain complaint narratives for generating test facts
-- **Public legal templates**: Structure guidance from California Courts and other public resources
-- All data is anonymized; see [data/LICENSES.md](./data/LICENSES.md)
-
-## Documentation
-
-- **[PRD.md](./PRD.md)** - Complete Product Requirements Document with API spec, acceptance criteria, and data sources
-- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - System design and data flow
-- **[DEMO_STATUS.md](./DEMO_STATUS.md)** - Current demo status and smoke test results
-
-## Security & Compliance
-
-- Secrets stored in `.env` (never committed)
-- Provider guardrails (prompt-level; native guardrails optional)
-- PII redaction in logs (configurable toggle; pending)
-- Basic token auth for API routes (implemented)
-
-## Roadmap
-
-**Current (MVP)**:
-- Single-user API
-- In-memory storage
-- Basic template support
-- DOCX export
-- File attachments with PDF/DOCX extraction and facts merge
-- OpenAI default with provider abstraction (OpenAI/Bedrock switchable)
-
-**Next**:
-- Real-time collaborative editing
-- Clause library with jurisdiction tags
-- Version history UI + change tracking
-- Persistent storage (PostgreSQL/Redis)
-
-## License
-
-MIT (or your preferred license)
-
-## Contributing
-
-This is an MVP project. Contributions welcome after initial release.
-
+For questions or issues, contact the Steno development team.
