@@ -2,14 +2,14 @@
 
 ## Top Priorities
 
-1) Enable Bedrock Guardrails and add retry logic for transient errors
-2) Add API token authentication to all endpoints (MVP-simple)
-3) Support attachments array in intake and log timestamps
-4) Add request/response logging with correlation IDs
-5) Add basic metrics: request duration + Bedrock token usage
-6) Meet performance target p95 < 5s (add simple benchmark harness)
-7) Implement draft versioning (v1/v2) with change log
-8) ✅ Add template management API: GET/POST /v1/templates
+1) Configure AWS Bedrock access and set ENV variables (API tokens, model, region)
+2) Implement ability to restore previous draft versions
+3) Include "why included" notes for major clauses in response
+4) Implement critic pass to check factual support for each claim
+5) Add PDF/DOCX attachment upload to /v1/intake
+6) Implement automatic text extraction from uploaded files
+7) Merge extracted text with structured facts
+8) Implement schema validation unit tests
 
 ### Recent Changes
 - Added Bearer auth for /v1/* and multipart attachments + timestamps for intake
