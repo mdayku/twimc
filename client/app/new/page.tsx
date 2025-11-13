@@ -511,6 +511,7 @@ export default function NewLetterPage() {
                     </ReactMarkdown>
                   </div>
                 </div>
+                </div>
               )}
             </div>
 
