@@ -6,9 +6,10 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import toast from 'react-hot-toast'
-import { Upload, Loader2, FileText, X } from 'lucide-react'
+import { Upload, Loader2, FileText, X, Download } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
-import { submitIntake, generateDraft } from '@/lib/api-service'
+import ReactMarkdown from 'react-markdown'
+import { submitIntake, generateDraft, exportToDocx } from '@/lib/api-service'
 import type { FactsJson } from '@/types/api'
 
 // Validation schema - most fields optional since they can be auto-filled from documents
@@ -32,6 +33,8 @@ export default function NewLetterPage() {
   const [files, setFiles] = useState<File[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [generatedDraft, setGeneratedDraft] = useState<any>(null)
+  const [showDraftModal, setShowDraftModal] = useState(false)
 
   const { register, handleSubmit, formState: { errors }, watch } = useForm<FormData>({
     resolver: zodResolver(factsSchema),
@@ -128,8 +131,12 @@ export default function NewLetterPage() {
 
       toast.success('Draft generated!')
       
-      // Navigate to draft page
-      router.push(`/draft/${intakeResponse.facts_id}?version=${generateResponse.version}`)
+      // Show draft in modal instead of navigating
+      setGeneratedDraft({
+        ...generateResponse,
+        facts_id: intakeResponse.facts_id
+      })
+      setShowDraftModal(true)
     } catch (error) {
       console.error('Error:', error)
       const err = error as { response?: { data?: { error?: string } } }
@@ -380,6 +387,72 @@ export default function NewLetterPage() {
           </button>
         </div>
       </form>
+
+      {/* Draft Modal */}
+      {showDraftModal && generatedDraft && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Draft Generated</h2>
+                <p className="text-sm text-gray-500 mt-1">Version {generatedDraft.version}</p>
+              </div>
+              <button
+                onClick={() => setShowDraftModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="prose max-w-none">
+                <ReactMarkdown>{generatedDraft.draft_md}</ReactMarkdown>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-gray-200 flex gap-4">
+              <button
+                onClick={async () => {
+                  try {
+                    await exportToDocx(generatedDraft.facts_id, generatedDraft.version)
+                    toast.success('Downloaded as DOCX!')
+                  } catch (error) {
+                    toast.error('Failed to export')
+                  }
+                }}
+                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Download DOCX
+              </button>
+              <button
+                onClick={() => {
+                  setShowDraftModal(false)
+                  router.push('/history')
+                }}
+                className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+              >
+                View History
+              </button>
+              <button
+                onClick={() => {
+                  setShowDraftModal(false)
+                  setGeneratedDraft(null)
+                }}
+                className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+              >
+                Create Another
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
