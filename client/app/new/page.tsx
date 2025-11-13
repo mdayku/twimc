@@ -420,7 +420,18 @@ export default function NewLetterPage() {
               <button
                 onClick={async () => {
                   try {
-                    await exportToDocx(generatedDraft.facts_id, generatedDraft.version)
+                    const blob = await exportToDocx({
+                      draft_md: generatedDraft.draft_md
+                    })
+                    // Create download link
+                    const url = window.URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = `demand-letter-${generatedDraft.facts_id}-v${generatedDraft.version}.docx`
+                    document.body.appendChild(a)
+                    a.click()
+                    document.body.removeChild(a)
+                    window.URL.revokeObjectURL(url)
                     toast.success('Downloaded as DOCX!')
                   } catch (error) {
                     toast.error('Failed to export')
