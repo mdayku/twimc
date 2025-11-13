@@ -164,7 +164,7 @@ Write a complete, professional demand letter in markdown format. The letter shou
    - Email: [FILL: Attorney's email address] (optional - omit this line if not provided)
 
 2. **Date:**
-   - [Use today's date in format: Month DD, YYYY]
+   - ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
 
 3. **Recipient Block (Defendant's Information):**
    - ${defendant}
