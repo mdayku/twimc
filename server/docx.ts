@@ -46,9 +46,6 @@ export async function markdownToDocxBuffer(
     )
   }
 
-  // Convert HTML elements to DOCX paragraphs
-  const elements = doc.body.querySelectorAll('*')
-
   // Helper to extract text runs with formatting from an element
   const getTextRuns = (element: Element): TextRun[] => {
     const runs: TextRun[] = []
@@ -90,22 +87,12 @@ export async function markdownToDocxBuffer(
     return runs.length > 0 ? runs : [new TextRun({ text: element.textContent || '' })]
   }
 
-  // Track which elements we've already processed
-  const processed = new Set<Element>()
-  
-  elements.forEach((el: Element) => {
-    // Skip if already processed or if it's a child of another block element
-    if (processed.has(el)) return
-    
+  // Convert HTML elements to DOCX paragraphs - only process direct children of body
+  const processElement = (el: Element) => {
     const tagName = el.tagName.toLowerCase()
-    
-    // Skip containers and non-block elements
-    if (['html', 'body', 'ul', 'ol', 'div', 'span'].includes(tagName)) return
-    
     const text = (el.textContent || '').trim()
-    if (!text) return
     
-    processed.add(el)
+    if (!text) return
 
     switch (tagName) {
       case 'h1':
@@ -170,33 +157,31 @@ export async function markdownToDocxBuffer(
         )
         break
 
-      default:
-        // Regular paragraph - check if it contains multiple lines
-        const textContent = el.textContent || ''
-        const lines = textContent.split('\n').filter(line => line.trim())
-        
-        if (lines.length > 1) {
-          // Multi-line paragraph - split into separate paragraphs
-          lines.forEach((line, idx) => {
-            paragraphs.push(
-              new Paragraph({
-                children: [new TextRun({ text: line.trim() })],
-                spacing: { 
-                  before: idx === 0 ? 100 : 0, 
-                  after: idx === lines.length - 1 ? 100 : 0 
-                },
-              })
-            )
+      case 'p':
+        // Regular paragraph with proper spacing
+        paragraphs.push(
+          new Paragraph({
+            children: getTextRuns(el),
+            spacing: { before: 120, after: 120 }, // Increased spacing between paragraphs
           })
-        } else {
-          // Single-line paragraph
-          paragraphs.push(
-            new Paragraph({
-              children: getTextRuns(el),
-              spacing: { before: 100, after: 100 },
-            })
-          )
-        }
+        )
+        break
+
+      default:
+        // For any other elements, treat as paragraph
+        paragraphs.push(
+          new Paragraph({
+            children: getTextRuns(el),
+            spacing: { before: 120, after: 120 },
+          })
+        )
+    }
+  }
+
+  // Process only direct children of body to avoid duplication
+  Array.from(doc.body.children).forEach(child => {
+    if (child instanceof Element) {
+      processElement(child)
     }
   })
   

@@ -67,13 +67,27 @@ export default function NewLetterPage() {
   // Replace [FILL: ...] with actual values
   const processDraftMarkdown = (markdown: string): string => {
     let processed = markdown
+    
+    // Replace filled placeholders with their values
     Object.entries(fillValues).forEach(([placeholder, value]) => {
-      if (value) {
+      if (value && value.trim()) {
         const regex = new RegExp(`\\[FILL:\\s*${placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\]`, 'g')
         processed = processed.replace(regex, value)
       }
     })
-    return processed
+    
+    // Remove any remaining unfilled [FILL: ...] placeholders and their surrounding sentences/phrases
+    // Pattern 1: Remove sentences containing unfilled placeholders
+    processed = processed.replace(/[^.!?]*\[FILL:[^\]]+\][^.!?]*[.!?]/g, '')
+    
+    // Pattern 2: Remove any standalone [FILL: ...] that might remain
+    processed = processed.replace(/\[FILL:[^\]]+\]/g, '')
+    
+    // Clean up any double spaces or line breaks that might result
+    processed = processed.replace(/\s{2,}/g, ' ')
+    processed = processed.replace(/\n{3,}/g, '\n\n')
+    
+    return processed.trim()
   }
 
   // Watch form values to check if auto-filled
