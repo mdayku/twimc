@@ -137,6 +137,30 @@ Guardrails:
     const amountClaimed = facts.damages?.amount_claimed || '[TODO: Total amount]'
     const incidentDate = facts.incident_date || '[TODO: Date of incident]'
     const deadlineDays = facts.demand_deadline_days || 30
+    
+    // Calculate estimated lost wages from special damages (typically 10-20% of medical costs)
+    const estimatedLostWages = facts.damages?.specials 
+      ? Math.round(facts.damages.specials * 0.15) // 15% of medical expenses
+      : null
+    
+    // Extract injuries and treatments from extracted text if available
+    let injuriesInfo = ''
+    let treatmentsInfo = ''
+    if (facts.extracted_text && Array.isArray(facts.extracted_text)) {
+      const allExtractedText = facts.extracted_text.map((et: any) => et.content).join('\n\n')
+      
+      // Look for injuries
+      const injuryMatch = allExtractedText.match(/Injuries Reported[:\s]*([^\n]+(?:\n[^\n]+)*?)(?=\n\n|Vehicle Damage|Officer's Conclusion|$)/i)
+      if (injuryMatch) {
+        injuriesInfo = `\n- **Injuries from documents:** ${injuryMatch[1].trim()}`
+      }
+      
+      // Look for treatments
+      const treatmentMatch = allExtractedText.match(/(?:Treatment|Medical Care|Emergency Room)[:\s]*([^\n]+(?:\n[^\n]+)*?)(?=\n\n|Follow-up|$)/i)
+      if (treatmentMatch) {
+        treatmentsInfo = `\n- **Treatment from documents:** ${treatmentMatch[1].trim()}`
+      }
+    }
 
     return `You are drafting a formal pre-litigation demand letter on behalf of ${plaintiff} (the injured party) against ${defendant} (the at-fault party/company).
 
@@ -149,9 +173,10 @@ Guardrails:
 - **Venue/Jurisdiction:** ${venue}
 - **Incident Description:** ${incident}
 - **Total Damages Claimed:** $${amountClaimed}
-${facts.damages?.specials ? `- **Special Damages:** $${facts.damages.specials}` : ''}
+${facts.damages?.specials ? `- **Special Damages (Medical):** $${facts.damages.specials}` : ''}
+${estimatedLostWages ? `- **Estimated Lost Wages:** $${estimatedLostWages}` : ''}
 ${facts.damages?.generals ? `- **General Damages:** $${facts.damages.generals}` : ''}
-${facts.damages?.breakdown ? `\n**Damages Breakdown:**\n${facts.damages.breakdown.map((item: any) => `  - ${item.item}: $${item.amount}`).join('\n')}` : ''}
+${facts.damages?.breakdown ? `\n**Damages Breakdown:**\n${facts.damages.breakdown.map((item: any) => `  - ${item.item}: $${item.amount}`).join('\n')}` : ''}${injuriesInfo}${treatmentsInfo}
 
 ## Your Task:
 Write a complete, professional demand letter in markdown format. The letter should be 2-3 pages long and include:
@@ -199,11 +224,11 @@ Write a complete, professional demand letter in markdown format. The letter shou
      * Work restrictions and impact on daily activities
    - Be specific about medical findings, not generic
    
-   **Economic Damages (Special Damages):**
-   ${facts.damages?.specials ? `- Past medical expenses: $${facts.damages.specials}` : '- Past medical expenses: [FILL: Total medical bills to date]'}
-   - Future medical expenses: [Estimate based on treatment plan - PT, follow-up visits, medications]
-   - Lost wages: [Calculate based on time off work and salary]
-   - Future lost earning capacity (if applicable)
+  **Economic Damages (Special Damages):**
+  ${facts.damages?.specials ? `- Past medical expenses: $${facts.damages.specials}` : '- Past medical expenses: [FILL: Total medical bills to date]'}
+  - Future medical expenses: [Estimate based on treatment plan - PT, follow-up visits, medications]
+  ${estimatedLostWages ? `- Lost wages: $${estimatedLostWages} (estimated based on recovery time and medical treatment)` : '- Lost wages: [Estimate based on time off work and salary]'}
+  - Future lost earning capacity (if applicable)
    
    **Non-Economic Damages (General Damages):**
    ${facts.damages?.generals ? `- Pain and suffering: $${facts.damages.generals}` : '- Pain and suffering: [Describe physical pain, emotional distress, loss of enjoyment of life]'}

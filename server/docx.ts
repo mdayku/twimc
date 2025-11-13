@@ -27,10 +27,20 @@ export async function markdownToDocxBuffer(
 
   // Add letterhead if provided
   if (letterhead) {
+    const letterheadLines = letterhead.split('\n').filter(line => line.trim())
+    letterheadLines.forEach(line => {
+      paragraphs.push(
+        new Paragraph({
+          children: [new TextRun({ text: line.trim() })],
+          alignment: AlignmentType.LEFT,
+          spacing: { after: 0 },
+        })
+      )
+    })
+    // Add spacing after letterhead
     paragraphs.push(
       new Paragraph({
-        children: [new TextRun({ text: letterhead, bold: true })],
-        alignment: AlignmentType.CENTER,
+        children: [new TextRun({ text: '' })],
         spacing: { after: 200 },
       })
     )
@@ -56,6 +66,12 @@ export async function markdownToDocxBuffer(
       } else if (node.nodeType === 1) { // Element node
         const elem = node as Element
         const tag = elem.tagName.toLowerCase()
+        
+        // Handle line breaks
+        if (tag === 'br') {
+          runs.push(new TextRun({ text: '', break: 1 }))
+          return
+        }
         
         const newInherited = { ...inherited }
         if (tag === 'strong' || tag === 'b') {
@@ -155,13 +171,32 @@ export async function markdownToDocxBuffer(
         break
 
       default:
-        // Regular paragraph
-        paragraphs.push(
-          new Paragraph({
-            children: getTextRuns(el),
-            spacing: { before: 100, after: 100 },
+        // Regular paragraph - check if it contains multiple lines
+        const textContent = el.textContent || ''
+        const lines = textContent.split('\n').filter(line => line.trim())
+        
+        if (lines.length > 1) {
+          // Multi-line paragraph - split into separate paragraphs
+          lines.forEach((line, idx) => {
+            paragraphs.push(
+              new Paragraph({
+                children: [new TextRun({ text: line.trim() })],
+                spacing: { 
+                  before: idx === 0 ? 100 : 0, 
+                  after: idx === lines.length - 1 ? 100 : 0 
+                },
+              })
+            )
           })
-        )
+        } else {
+          // Single-line paragraph
+          paragraphs.push(
+            new Paragraph({
+              children: getTextRuns(el),
+              spacing: { before: 100, after: 100 },
+            })
+          )
+        }
     }
   })
   

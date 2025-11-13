@@ -363,22 +363,19 @@ export function mergeExtractedTextWithFacts(
 
   // Look for missing damage amounts
   if (!facts.damages?.amount_claimed || facts.damages.amount_claimed === 0) {
-    const amountPatterns = [
-      /total[^$]*\$([0-9,]+(?:\.[0-9]{2})?)/i,
-      /damages[:\s]*\$([0-9,]+(?:\.[0-9]{2})?)/i,
-      /\$([0-9,]+(?:\.[0-9]{2})?)/g
-    ]
-
-    for (const pattern of amountPatterns) {
-      const matches = allText.match(pattern)
-      if (matches) {
-        // Take the largest amount found (likely the total)
-        const amounts = matches.map(m => parseFloat(m.replace(/[$,]/g, ''))).filter(a => a > 100) // Ignore small amounts
-        if (amounts.length > 0) {
-          mergedFacts.damages = mergedFacts.damages || {}
-          mergedFacts.damages.amount_claimed = Math.max(...amounts)
-          break
-        }
+    // Find all dollar amounts in the text
+    const dollarPattern = /\$([0-9,]+(?:\.[0-9]{2})?)/g
+    const matches = [...allText.matchAll(dollarPattern)]
+    
+    if (matches.length > 0) {
+      // Extract amounts and take the largest (likely the total claim)
+      const amounts = matches
+        .map(m => parseFloat(m[1].replace(/,/g, '')))
+        .filter(a => a > 100) // Ignore small amounts like $5.00
+      
+      if (amounts.length > 0) {
+        mergedFacts.damages = mergedFacts.damages || {}
+        mergedFacts.damages.amount_claimed = Math.max(...amounts)
       }
     }
   }
