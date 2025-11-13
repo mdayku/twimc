@@ -190,9 +190,14 @@ Write a complete, professional demand letter in markdown format. The letter shou
    - Connect the facts to the legal duty breached
 
 8. **Injuries and Damages (3-5 paragraphs):**
-   - Describe ${plaintiff}'s injuries in detail based on medical records
-   - Explain medical treatment received (ER visit, follow-up care, ongoing treatment)
-   - Discuss impact on daily life, work, activities (time off work, limitations)
+   - **CRITICAL:** Use the incident description to identify specific injuries mentioned (cervical sprain, shoulder sprain, concussion, broken bones, etc.)
+   - Describe ${plaintiff}'s injuries in detail: specific body parts injured, severity, symptoms
+   - Explain medical treatment received in detail:
+     * Emergency room visit and procedures (CT scans, X-rays, medications given)
+     * Follow-up care with specialists (orthopedic, neurologist, physical therapy)
+     * Current treatment status and prognosis
+     * Work restrictions and impact on daily activities
+   - Be specific about medical findings, not generic
    
    **Economic Damages (Special Damages):**
    ${facts.damages?.specials ? `- Past medical expenses: $${facts.damages.specials}` : '- Past medical expenses: [FILL: Total medical bills to date]'}
@@ -230,6 +235,7 @@ Write a complete, professional demand letter in markdown format. The letter shou
 
 ## CRITICAL INSTRUCTIONS:
 - Write a COMPLETE letter, not an outline or template
+- **DO NOT include section headers like "## Introduction" or "## Statement of Facts"** - write the letter as flowing prose without markdown headers
 - Use actual narrative prose for sections you can write based on provided facts
 - For REQUIRED information that is truly missing (addresses, phone numbers, specific medical bills, exact dates), use this format: [FILL: description of what's needed]
 - Examples of [FILL] usage:
@@ -242,7 +248,8 @@ Write a complete, professional demand letter in markdown format. The letter shou
 - Be SPECIFIC in [FILL] descriptions: "Attorney's office address" not just "Address"
 - Do NOT use [FILL] for things you can reasonably infer or write generically
 - Make the letter persuasive and detailed enough to actually use in practice
-- Return ONLY the markdown letter - no explanations or meta-commentary
+- Return ONLY the letter content - no section headers, no explanations, no meta-commentary
+- Format the letter like an actual legal document with proper spacing between sections, but NO markdown headers
 
 ${templateMd ? `\n## Template Reference:\n${templateMd.slice(0, 500)}` : ''}
 

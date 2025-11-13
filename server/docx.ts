@@ -13,7 +13,12 @@ export async function markdownToDocxBuffer(
   // Ensure md is a string
   const mdString = typeof md === 'string' ? md : String(md || '')
   
-  // Parse markdown to HTML
+  // Parse markdown to HTML with proper options
+  marked.setOptions({
+    breaks: true,
+    gfm: true
+  })
+  
   const html = await marked(mdString)
   const { window } = new JSDOM(html)
   const doc = window.document
@@ -32,52 +37,59 @@ export async function markdownToDocxBuffer(
   }
 
   // Convert HTML elements to DOCX paragraphs
-  const elements = doc.querySelectorAll('h1, h2, h3, h4, h5, h6, p, li, blockquote, ul, ol')
+  const elements = doc.body.querySelectorAll('*')
 
+  // Helper to extract text runs with formatting from an element
+  const getTextRuns = (element: Element): TextRun[] => {
+    const runs: TextRun[] = []
+    
+    const processNode = (node: Node, inherited: { bold?: boolean, italic?: boolean } = {}) => {
+      if (node.nodeType === 3) { // Text node
+        const nodeText = node.textContent || ''
+        if (nodeText.trim()) {
+          runs.push(new TextRun({ 
+            text: nodeText,
+            bold: inherited.bold,
+            italics: inherited.italic
+          }))
+        }
+      } else if (node.nodeType === 1) { // Element node
+        const elem = node as Element
+        const tag = elem.tagName.toLowerCase()
+        
+        const newInherited = { ...inherited }
+        if (tag === 'strong' || tag === 'b') {
+          newInherited.bold = true
+        }
+        if (tag === 'em' || tag === 'i') {
+          newInherited.italic = true
+        }
+        
+        // Process children with inherited formatting
+        elem.childNodes.forEach(child => processNode(child, newInherited))
+      }
+    }
+    
+    element.childNodes.forEach(node => processNode(node))
+    return runs.length > 0 ? runs : [new TextRun({ text: element.textContent || '' })]
+  }
+
+  // Track which elements we've already processed
+  const processed = new Set<Element>()
+  
   elements.forEach((el: Element) => {
+    // Skip if already processed or if it's a child of another block element
+    if (processed.has(el)) return
+    
     const tagName = el.tagName.toLowerCase()
     
-    // Skip ul/ol containers, we'll handle li elements directly
-    if (tagName === 'ul' || tagName === 'ol') return
+    // Skip containers and non-block elements
+    if (['html', 'body', 'ul', 'ol', 'div', 'span'].includes(tagName)) return
     
     const text = (el.textContent || '').trim()
     if (!text) return
-
-    // Helper to extract text runs with formatting
-    const getTextRuns = (element: Element): TextRun[] => {
-      const runs: TextRun[] = []
-      const processNode = (node: Node) => {
-        if (node.nodeType === 3) { // Text node
-          const nodeText = node.textContent || ''
-          if (nodeText.trim()) {
-            runs.push(new TextRun({ text: nodeText }))
-          }
-        } else if (node.nodeType === 1) { // Element node
-          const elem = node as Element
-          const elemText = elem.textContent || ''
-          if (!elemText.trim()) return
-          
-          const tag = elem.tagName.toLowerCase()
-          if (tag === 'strong' || tag === 'b') {
-            runs.push(new TextRun({ text: elemText, bold: true }))
-          } else if (tag === 'em' || tag === 'i') {
-            runs.push(new TextRun({ text: elemText, italics: true }))
-          } else {
-            // Process children
-            elem.childNodes.forEach(processNode)
-          }
-        }
-      }
-      
-      // If element has simple text, just return it
-      if (element.children.length === 0) {
-        return [new TextRun({ text })]
-      }
-      
-      // Otherwise process children
-      element.childNodes.forEach(processNode)
-      return runs.length > 0 ? runs : [new TextRun({ text })]
-    }
+    
+    processed.add(el)
 
     switch (tagName) {
       case 'h1':

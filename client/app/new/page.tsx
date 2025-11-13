@@ -487,24 +487,28 @@ export default function NewLetterPage() {
                   </button>
                 </div>
               ) : (
-                <div className="w-full overflow-x-hidden">
+                <div className="space-y-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                    <p className="text-sm text-blue-800">
+                      <strong>Preview Note:</strong> This is a markdown preview. Download as DOCX for clean, professional formatting without any markdown syntax.
+                    </p>
+                  </div>
                   <div className="bg-white p-8 shadow-sm border border-gray-200 rounded-lg mx-auto" style={{ maxWidth: '650px' }}>
-                    <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-p:leading-relaxed prose-strong:text-gray-900" style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+                    <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-p:leading-relaxed prose-strong:text-gray-900" style={{ wordWrap: 'break-word', overflowWrap: 'break-word', hyphens: 'auto' }}>
                       <ReactMarkdown 
-                        components={{
-                          h1: ({node, ...props}) => <h1 className="text-2xl font-bold mb-4 text-center break-words" {...props} />,
-                          h2: ({node, ...props}) => <h2 className="text-xl font-semibold mt-6 mb-3 break-words" {...props} />,
-                          h3: ({node, ...props}) => <h3 className="text-lg font-semibold mt-4 mb-2 break-words" {...props} />,
-                          p: ({node, ...props}) => <p className="mb-4 leading-relaxed break-words" {...props} />,
-                          strong: ({node, ...props}) => <strong className="font-semibold break-words" {...props} />,
-                          ul: ({node, ...props}) => <ul className="list-disc ml-6 mb-4" {...props} />,
-                          ol: ({node, ...props}) => <ol className="list-decimal ml-6 mb-4" {...props} />,
-                          li: ({node, ...props}) => <li className="mb-2 break-words" {...props} />,
-                        }}
-                      >
-                        {processDraftMarkdown(generatedDraft.draft_md)}
-                      </ReactMarkdown>
-                    </div>
+                      components={{
+                        h1: ({node, ...props}) => <h1 className="text-2xl font-bold mb-4 text-center break-words" {...props} />,
+                        h2: ({node, ...props}) => <h2 className="text-xl font-semibold mt-6 mb-3 break-words" {...props} />,
+                        h3: ({node, ...props}) => <h3 className="text-lg font-semibold mt-4 mb-2 break-words" {...props} />,
+                        p: ({node, ...props}) => <p className="mb-4 leading-relaxed break-words" {...props} />,
+                        strong: ({node, ...props}) => <strong className="font-semibold break-words" {...props} />,
+                        ul: ({node, ...props}) => <ul className="list-disc ml-6 mb-4" {...props} />,
+                        ol: ({node, ...props}) => <ol className="list-decimal ml-6 mb-4" {...props} />,
+                        li: ({node, ...props}) => <li className="mb-2 break-words" {...props} />,
+                      }}
+                    >
+                      {processDraftMarkdown(generatedDraft.draft_md)}
+                    </ReactMarkdown>
                   </div>
                 </div>
               )}
