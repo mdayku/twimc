@@ -1,0 +1,86 @@
+═══════════════════════════════════════════════════════════════
+                    CITY GENERAL HOSPITAL
+                    Emergency Department
+                 1500 Medical Center Drive
+              Los Angeles, CA 90001 | (323) 555-0100
+═══════════════════════════════════════════════════════════════
+
+STATEMENT OF ACCOUNT
+
+Patient Name: Sarah Johnson
+Date of Birth: 05/12/1985
+Patient ID: MRN-847562
+Date of Service: January 15, 2024
+Account Number: INV-2024-00847
+
+Insurance: [Pending - Self Pay]
+
+───────────────────────────────────────────────────────────────
+SERVICE DESCRIPTION                              CHARGE
+───────────────────────────────────────────────────────────────
+
+EMERGENCY DEPARTMENT SERVICES
+  Emergency Room Visit - Level 4                 $2,850.00
+  Physician Consultation - Emergency             $1,200.00
+  Trauma Activation Fee                          $1,500.00
+
+DIAGNOSTIC IMAGING
+  CT Scan - Head without contrast                $3,200.00
+  X-Ray - Cervical Spine (3 views)              $  450.00
+  X-Ray - Chest (2 views)                       $  380.00
+  X-Ray - Left Shoulder (2 views)               $  380.00
+
+LABORATORY TESTS
+  Complete Blood Count (CBC)                     $  125.00
+  Comprehensive Metabolic Panel                  $  165.00
+  Urinalysis                                     $   85.00
+
+MEDICATIONS & SUPPLIES
+  IV Fluid Administration                        $  320.00
+  Pain Medication (Morphine 4mg IV)             $  180.00
+  Anti-inflammatory (Toradol 30mg IV)           $  145.00
+  Nausea Medication (Zofran 4mg IV)             $  120.00
+  Cervical Collar - Soft                        $   95.00
+  Arm Sling                                      $   45.00
+  Medical Supplies & Dressings                   $  285.00
+
+PROFESSIONAL SERVICES
+  Radiologist - CT Interpretation                $  650.00
+  Radiologist - X-Ray Interpretation (3)         $  420.00
+
+───────────────────────────────────────────────────────────────
+TOTAL CHARGES                                   $12,595.00
+───────────────────────────────────────────────────────────────
+
+PAYMENT DUE: $12,595.00
+
+Payment due upon receipt. Please remit payment to:
+City General Hospital - Patient Accounts
+P.O. Box 90001, Los Angeles, CA 90001
+
+For billing inquiries: (323) 555-0199
+Online payment: www.citygeneralhospital.org/billing
+
+───────────────────────────────────────────────────────────────
+DIAGNOSIS CODES (ICD-10):
+  S13.4XXA - Sprain of ligaments of cervical spine, initial
+  S43.401A - Unspecified sprain of right shoulder joint, initial
+  S06.0X0A - Concussion without loss of consciousness, initial
+  V43.52XA - Car driver injured in collision with car in traffic, initial
+
+PROCEDURE CODES (CPT):
+  99285 - Emergency department visit, high complexity
+  70450 - CT head/brain without contrast
+  72040 - Radiologic exam, cervical spine, 2-3 views
+  71020 - Radiologic exam, chest, 2 views
+  73030 - Radiologic exam, shoulder, 2 views
+
+───────────────────────────────────────────────────────────────
+This is not a bill. This is a statement of services rendered.
+Insurance claims are being processed. You will receive a final
+bill after insurance adjudication.
+
+If you have questions about this statement, please contact our
+billing department at the number listed above.
+═══════════════════════════════════════════════════════════════
+

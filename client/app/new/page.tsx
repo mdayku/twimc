@@ -460,20 +460,24 @@ export default function NewLetterPage() {
                     </p>
                   </div>
                   
-                  {Object.keys(fillValues).map((placeholder) => (
-                    <div key={placeholder}>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {placeholder}
-                      </label>
-                      <input
-                        type="text"
-                        value={fillValues[placeholder]}
-                        onChange={(e) => setFillValues({ ...fillValues, [placeholder]: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder={`Enter ${placeholder.toLowerCase()}`}
-                      />
-                    </div>
-                  ))}
+                  {Object.keys(fillValues).map((placeholder) => {
+                    const isOptional = placeholder.toLowerCase().includes('optional') || placeholder.toLowerCase().includes('email')
+                    return (
+                      <div key={placeholder}>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          {placeholder}
+                          {isOptional && <span className="text-gray-400 text-xs ml-2">(optional)</span>}
+                        </label>
+                        <input
+                          type="text"
+                          value={fillValues[placeholder]}
+                          onChange={(e) => setFillValues({ ...fillValues, [placeholder]: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder={`Enter ${placeholder.toLowerCase()}`}
+                        />
+                      </div>
+                    )
+                  })}
                   
                   <button
                     onClick={() => setShowFillForm(false)}
@@ -483,8 +487,20 @@ export default function NewLetterPage() {
                   </button>
                 </div>
               ) : (
-                <div className="prose max-w-none">
-                  <ReactMarkdown>{processDraftMarkdown(generatedDraft.draft_md)}</ReactMarkdown>
+                <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-p:leading-relaxed prose-strong:text-gray-900">
+                  <div className="bg-white p-8 shadow-sm border border-gray-200 rounded-lg" style={{ maxWidth: '8.5in', margin: '0 auto' }}>
+                    <ReactMarkdown 
+                      components={{
+                        h1: ({node, ...props}) => <h1 className="text-2xl font-bold mb-4 text-center" {...props} />,
+                        h2: ({node, ...props}) => <h2 className="text-xl font-semibold mt-6 mb-3" {...props} />,
+                        h3: ({node, ...props}) => <h3 className="text-lg font-semibold mt-4 mb-2" {...props} />,
+                        p: ({node, ...props}) => <p className="mb-4 leading-relaxed" {...props} />,
+                        strong: ({node, ...props}) => <strong className="font-semibold" {...props} />,
+                      }}
+                    >
+                      {processDraftMarkdown(generatedDraft.draft_md)}
+                    </ReactMarkdown>
+                  </div>
                 </div>
               )}
             </div>

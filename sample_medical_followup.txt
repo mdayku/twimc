@@ -1,0 +1,139 @@
+═══════════════════════════════════════════════════════════════
+              WESTSIDE ORTHOPEDIC & SPINE CENTER
+                    2400 Wilshire Boulevard
+                Los Angeles, CA 90057 | (213) 555-0250
+═══════════════════════════════════════════════════════════════
+
+PATIENT VISIT SUMMARY
+
+Patient: Sarah Johnson
+DOB: 05/12/1985
+MRN: WSO-2024-5847
+Visit Date: January 22, 2024
+Provider: Dr. Michael Chen, MD - Orthopedic Surgery
+
+───────────────────────────────────────────────────────────────
+CHIEF COMPLAINT:
+Follow-up for motor vehicle accident injuries sustained on 
+January 15, 2024. Ongoing neck pain, shoulder pain, and headaches.
+
+HISTORY OF PRESENT ILLNESS:
+Ms. Johnson is a 38-year-old female presenting for initial 
+orthopedic evaluation following a motor vehicle collision one week 
+ago. Patient reports she was the driver of a vehicle that was 
+rear-ended by a delivery truck while stopped at a red light. 
+
+She was evaluated in the Emergency Department at City General 
+Hospital immediately following the accident. CT scan of the head 
+was negative for intracranial injury. X-rays revealed no fractures 
+but showed soft tissue swelling in the cervical region.
+
+CURRENT SYMPTOMS:
+- Persistent neck pain (8/10 severity), worse with movement
+- Left shoulder pain (7/10 severity), limited range of motion
+- Daily headaches (6/10 severity), described as pressure-type
+- Difficulty sleeping due to pain
+- Unable to return to work (office manager position)
+- Requires assistance with daily activities
+
+PHYSICAL EXAMINATION:
+
+General: Alert, oriented, in moderate distress due to pain
+
+Cervical Spine:
+- Tenderness to palpation over C4-C6 vertebrae
+- Paraspinal muscle spasm present bilaterally
+- Range of motion limited in all planes
+  * Flexion: 20° (normal 50°)
+  * Extension: 15° (normal 60°)
+  * Lateral bending: 15° bilaterally (normal 45°)
+- Positive Spurling's test on left
+
+Left Shoulder:
+- Tenderness over AC joint and anterior shoulder
+- Swelling noted
+- Active range of motion limited due to pain
+  * Forward flexion: 90° (normal 180°)
+  * Abduction: 80° (normal 180°)
+  * Internal/external rotation limited
+- Strength testing 4/5 due to pain inhibition
+- Negative impingement signs
+
+Neurological:
+- Sensation intact in all dermatomes
+- Reflexes 2+ and symmetric
+- No focal motor deficits
+- Negative Hoffman's and Babinski signs
+
+───────────────────────────────────────────────────────────────
+REVIEW OF IMAGING:
+- CT Head (1/15/24): No acute intracranial abnormality
+- C-spine X-rays (1/15/24): No fracture, soft tissue swelling
+- Chest X-ray (1/15/24): No acute cardiopulmonary process
+- Shoulder X-ray (1/15/24): No fracture, mild soft tissue swelling
+
+───────────────────────────────────────────────────────────────
+ASSESSMENT:
+
+1. Cervical strain/sprain with muscle spasm (S13.4)
+2. Left shoulder sprain (S43.401A)
+3. Post-concussion syndrome (F07.81)
+4. Post-traumatic headaches (G44.309)
+
+PROGNOSIS:
+Guarded. Patient has significant functional limitations and pain.
+Recovery expected to take 8-12 weeks minimum with appropriate
+treatment. May require extended physical therapy and possible
+interventional pain management if conservative treatment fails.
+
+───────────────────────────────────────────────────────────────
+TREATMENT PLAN:
+
+1. MEDICATIONS:
+   - Cyclobenzaprine 10mg at bedtime for muscle spasm
+   - Meloxicam 15mg daily for inflammation
+   - Tramadol 50mg every 6 hours as needed for pain
+   - Continue over-the-counter acetaminophen as needed
+
+2. PHYSICAL THERAPY:
+   - Referral to PT for cervical stabilization and shoulder rehab
+   - 3x per week for 6 weeks initially
+   - Focus on pain reduction, ROM improvement, strengthening
+
+3. WORK STATUS:
+   - Patient remains off work
+   - Unable to perform office duties due to pain and limited mobility
+   - Re-evaluate work capacity in 4 weeks
+
+4. ACTIVITY RESTRICTIONS:
+   - No lifting over 5 pounds
+   - No overhead reaching
+   - Avoid prolonged sitting or standing
+   - Continue wearing cervical collar as needed for support
+
+5. FOLLOW-UP:
+   - Return to clinic in 4 weeks
+   - Sooner if symptoms worsen
+   - Will consider MRI if no improvement with conservative care
+
+───────────────────────────────────────────────────────────────
+WORK STATUS: OFF WORK until further notice
+
+NEXT APPOINTMENT: February 19, 2024 at 2:00 PM
+
+PRESCRIPTIONS ISSUED:
+- Cyclobenzaprine 10mg #30
+- Meloxicam 15mg #30
+- Tramadol 50mg #60
+
+───────────────────────────────────────────────────────────────
+Electronically signed by:
+Michael Chen, MD
+Board Certified Orthopedic Surgeon
+License #: CA-A123456
+Date/Time: 01/22/2024 16:45 PST
+
+For urgent questions, call (213) 555-0250
+After hours: (213) 555-0251
+═══════════════════════════════════════════════════════════════
+

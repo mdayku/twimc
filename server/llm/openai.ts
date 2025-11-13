@@ -156,36 +156,40 @@ ${facts.damages?.breakdown ? `\n**Damages Breakdown:**\n${facts.damages.breakdow
 ## Your Task:
 Write a complete, professional demand letter in markdown format. The letter should be 2-3 pages long and include:
 
-1. **Letterhead/Header Block:**
+1. **Letterhead/Header Block (Attorney's Information):**
    - ${firm}
    - ${attorney}, Esq.
-   - [TODO: Address, phone, email if not provided]
+   - [FILL: Attorney's office address]
+   - [FILL: Attorney's phone number]
+   - Email: [FILL: Attorney's email address] (optional - omit this line if not provided)
 
-2. **Recipient Block:**
+2. **Date:**
+   - [Use today's date in format: Month DD, YYYY]
+
+3. **Recipient Block (Defendant's Information):**
    - ${defendant}
-   - [TODO: Address - use best guess based on defendant type]
-   - Date: [Use today's date]
+   - [FILL: Defendant's mailing address]
 
-3. **Re: Line:**
+4. **Re: Line:**
    - "Re: Demand for Settlement - ${plaintiff} v. ${defendant}"
 
-4. **Introduction (1-2 paragraphs):**
+5. **Introduction (1-2 paragraphs):**
    - State that you represent ${plaintiff}
    - Briefly describe the incident (date, location, nature)
    - State the purpose: formal demand for settlement
 
-5. **Statement of Facts (3-5 paragraphs):**
+6. **Statement of Facts (3-5 paragraphs):**
    - Detailed narrative of what happened based on the incident description
    - Include specific details about how the incident occurred
    - Describe the defendant's role/negligence
    - Explain the immediate aftermath
 
-6. **Liability Analysis (2-3 paragraphs):**
+7. **Liability Analysis (2-3 paragraphs):**
    - Explain why ${defendant} is legally responsible
    - Cite relevant legal theories (negligence, vicarious liability, etc.)
    - Connect the facts to the legal duty breached
 
-7. **Injuries and Damages (2-4 paragraphs):**
+8. **Injuries and Damages (2-4 paragraphs):**
    - Describe ${plaintiff}'s injuries in detail
    - Explain medical treatment received
    - Discuss impact on daily life, work, activities
@@ -193,13 +197,13 @@ Write a complete, professional demand letter in markdown format. The letter shou
    - Discuss non-economic damages (pain, suffering, emotional distress)
    - State the total amount: $${amountClaimed}
 
-8. **Demand (1-2 paragraphs):**
+9. **Demand (1-2 paragraphs):**
    - Formal demand for $${amountClaimed}
    - State deadline: ${deadlineDays} days from receipt
    - Mention that failure to respond may result in litigation
-   - Include attorney's contact information for response
+   - State: "Please direct all correspondence to my office at the address and phone number listed above."
 
-9. **Closing:**
+10. **Closing:**
    - Professional closing ("Sincerely,")
    - ${attorney}, Esq.
    - Attorney for ${plaintiff}
@@ -218,10 +222,13 @@ Write a complete, professional demand letter in markdown format. The letter shou
 - Use actual narrative prose for sections you can write based on provided facts
 - For REQUIRED information that is truly missing (addresses, phone numbers, specific medical bills, exact dates), use this format: [FILL: description of what's needed]
 - Examples of [FILL] usage:
+  - [FILL: Attorney's office address]
+  - [FILL: Attorney's phone number]
+  - [FILL: Attorney's email address] (optional)
   - [FILL: Defendant's mailing address]
-  - [FILL: Attorney phone number]
   - [FILL: Specific medical bills amount]
   - [FILL: Date of medical treatment]
+- Be SPECIFIC in [FILL] descriptions: "Attorney's office address" not just "Address"
 - Do NOT use [FILL] for things you can reasonably infer or write generically
 - Make the letter persuasive and detailed enough to actually use in practice
 - Return ONLY the markdown letter - no explanations or meta-commentary
