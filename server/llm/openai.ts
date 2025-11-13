@@ -182,21 +182,29 @@ ${facts.damages?.breakdown ? `\n**Damages Breakdown:**\n${facts.damages.breakdow
 Write a complete, professional demand letter in markdown format. The letter should be 2-3 pages long and include:
 
 1. **Letterhead/Header Block (Attorney's Information):**
+   Put each item on its own line:
    - ${firm}
    - ${attorney}, Esq.
    - [FILL: Attorney's office address]
    - [FILL: Attorney's phone number]
    - Email: [FILL: Attorney's email address] (optional - omit this line if not provided)
+   
+   Then add a blank line before the date.
 
 2. **Date:**
    - ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
 
 3. **Recipient Block (Defendant's Information):**
+   Put each item on its own line:
    - ${defendant}
    - [FILL: Defendant's mailing address]
+   
+   Then add a blank line before the Re: line.
 
 4. **Re: Line:**
    - "Re: Demand for Settlement - ${plaintiff} v. ${defendant}"
+   
+   Then add a blank line before "Dear Sir/Madam,"
 
 5. **Introduction (1-2 paragraphs):**
    - State that you represent ${plaintiff}
@@ -244,6 +252,7 @@ Write a complete, professional demand letter in markdown format. The letter shou
    - State: "Please direct all correspondence to my office at the address and phone number listed above."
 
 10. **Closing:**
+   Put each item on its own line:
    - Professional closing ("Sincerely,")
    - ${attorney}, Esq.
    - ${firm}
@@ -261,6 +270,8 @@ Write a complete, professional demand letter in markdown format. The letter shou
 ## CRITICAL INSTRUCTIONS:
 - Write a COMPLETE letter, not an outline or template
 - **DO NOT include section headers like "## Introduction" or "## Statement of Facts"** - write the letter as flowing prose without markdown headers
+- **USE LINE BREAKS**: Put each line of the letterhead, date, recipient block, and closing on separate lines
+- Add blank lines between major sections (header, date, recipient, Re:, salutation, body paragraphs, closing)
 - Use actual narrative prose for sections you can write based on provided facts
 - For REQUIRED information that is truly missing (addresses, phone numbers, specific medical bills, exact dates), use this format: [FILL: description of what's needed]
 - Examples of [FILL] usage:

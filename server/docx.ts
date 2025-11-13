@@ -22,6 +22,7 @@ export async function markdownToDocxBuffer(
   const html = await marked(mdString)
   const { window } = new JSDOM(html)
   const doc = window.document
+  const Element = window.Element // Get Element from JSDOM window
 
   const paragraphs: Paragraph[] = []
 
