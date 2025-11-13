@@ -1,117 +1,94 @@
-# 🎯 Demo Guide for TWIMC
+# TWIMC Demo Guide
 
-## Quick Demo Flow
+## Sample Case Overview
 
-### 1. Access Your Deployed App
-Your app is now live on Vercel! Visit your deployment URL.
+**Scenario:** Rear-end collision by delivery truck driver
 
-### 2. Sample Document for Testing
-I've created a sample incident report for you to test the upload feature:
+**Plaintiff:** Sarah Johnson (victim)
+**Defendant:** ABC Delivery Services, Inc.
+**Incident Date:** January 15, 2024
+**Location:** Los Angeles, CA
 
-**File:** `sample_incident_report.docx` (in the root directory)
+## Suggested Damages Calculation
 
-**What it contains:**
-- **Plaintiff:** Sarah Johnson
-- **Defendant:** ABC Delivery Services, Inc.
-- **Incident:** Car accident at Main Street & Oak Avenue on January 15, 2024
-- **Damages:** $44,550 total (medical, property, lost wages)
-- **Details:** Driver ran red light, police report, witnesses, medical treatment
+### Economic Damages (Specials)
+- **Past Medical:** $12,595 (ER bill)
+- **Future Medical:** $8,000 (estimated PT, follow-ups, meds for 3 months)
+- **Lost Wages:** $18,000 (12 weeks off work @ $1,500/week)
+- **Subtotal Specials:** $38,595
 
-### 3. Demo Steps
+### Non-Economic Damages (Generals)
+- **Pain & Suffering:** $50,000
+  - Moderate injuries (cervical sprain, shoulder sprain, concussion)
+  - 8-12 week recovery period
+  - Ongoing pain and limitations
+  - Unable to work or perform daily activities
+- **Emotional Distress:** $10,000
+  - Post-traumatic stress from accident
+  - Sleep disturbances
+  - Anxiety about driving
 
-#### Step 1: Homepage
-- Show the clean TWIMC branding
-- Highlight the 4 key features
-- Click "Create New Letter"
+**Subtotal Generals:** $60,000
 
-#### Step 2: Intake Form (`/new`)
-- **Upload the sample document** (drag & drop `sample_incident_report.docx`)
-- Watch it extract the incident details automatically
-- Fill in any remaining fields:
-  - Plaintiff: Sarah Johnson
-  - Defendant: ABC Delivery Services, Inc.
-  - Incident: (auto-filled from document)
-  - Amount Claimed: $44,550
-  - Venue: Los Angeles, CA
-- Click "Generate Draft"
+### **TOTAL DEMAND: $98,595** (round to $100,000 for settlement purposes)
 
-#### Step 3: Draft View (`/draft/[factsId]`)
-- Watch the AI generate the letter (~15 seconds)
-- Show the markdown preview with all sections:
-  - Date and recipient
-  - Introduction
-  - Statement of facts
-  - Liability analysis
-  - Damages breakdown
-  - Demand for payment
-- Highlight the version number (v1)
+## How to Use the Demo
 
-#### Step 4: Export Options
-- **Export to DOCX**: Download for Word editing
-- **Export to Google Docs**: (requires Google OAuth setup)
-  - Shows collaboration capabilities
-  - Can invite team members
-  - Add comments and suggestions
+1. **Upload Documents:**
+   - `sample_incident_report.docx` (police report)
+   - `sample_medical_bill.docx` (ER charges)
+   - `sample_medical_followup.docx` (orthopedic visit)
 
-#### Step 5: Additional Features
-- **Templates** (`/templates`): Show custom template creation
-- **History** (`/history`): Show all generated letters
-- **Version History**: Generate another draft to show v2, v3, etc.
+2. **Fill in Form:**
+   - **Plaintiff Attorney:** [Your name]
+   - **Plaintiff Firm:** [Your firm name]
+   - **Amount Claimed:** $100,000
+   - **Special Damages:** $38,595
+   - **General Damages:** $60,000
 
-### 4. Key Talking Points
+3. **Auto-filled Fields** (from documents):
+   - Plaintiff: Sarah Johnson
+   - Defendant: ABC Delivery Services, Inc.
+   - Incident: Rear-end collision details
+   - Venue: Los Angeles, CA
 
-**For Law Firms:**
-- ⚡ **Speed**: 15 seconds vs hours of manual drafting
-- 📄 **Accuracy**: Extracts facts from source documents
-- 🎨 **Customization**: Firm-specific templates
-- 👥 **Collaboration**: Google Docs export for team review
-- 📊 **Tracking**: Version history for all drafts
+4. **Generate Letter:**
+   - Wait 20-30 seconds for GPT-4o to generate
+   - Fill in missing information if prompted:
+     - Attorney's office address
+     - Attorney's phone number
+     - Attorney's email (optional)
+     - Defendant's mailing address
 
-**Technical Highlights:**
-- 🤖 **AI-Powered**: GPT-4o for professional legal writing
-- 🔒 **Secure**: PII redaction, rate limiting, Bearer auth
-- 💾 **Persistent**: PostgreSQL database (Neon)
-- 🚀 **Fast**: Sub-second API responses, ~15s generation
-- 📱 **Responsive**: Works on desktop, tablet, mobile
+5. **Review & Download:**
+   - Preview the formatted letter
+   - Download as DOCX
+   - Or export to Google Docs
 
-### 5. Sample Data for Manual Entry
+## Expected Letter Quality
 
-If you want to demo without uploading a file:
+The generated letter should include:
+- ✅ Professional letterhead with firm name
+- ✅ Detailed statement of facts from police report
+- ✅ Liability analysis (rear-end collision = presumed negligence)
+- ✅ Comprehensive damages breakdown
+- ✅ Specific medical treatment details
+- ✅ Work impact and lost wages
+- ✅ Future medical needs
+- ✅ Clear demand with deadline
+- ✅ Professional closing with firm name
 
-```
-Plaintiff: Sarah Johnson
-Defendant: ABC Delivery Services, Inc.
-Incident: On January 15, 2024, plaintiff was struck by defendant's delivery truck at Main Street and Oak Avenue. Defendant ran a red light.
-Amount Claimed: $44,550
-Venue: Los Angeles, CA
-```
+## Tips for Best Results
 
-### 6. Troubleshooting
+- **Be specific:** The more details in the incident description, the better
+- **Include all documents:** Upload all 3 sample docs for complete context
+- **Fill damages fields:** Enter both specials and generals for accurate breakdown
+- **Review placeholders:** Fill in any [FILL: ...] fields that appear
+- **Check formatting:** Letter should be formatted like an actual legal document
 
-**If Google Docs export doesn't work:**
-- This requires Google Cloud Console setup (see DEPLOYMENT.md Step 2)
-- For demo purposes, focus on DOCX export which works immediately
+## Troubleshooting
 
-**If generation is slow:**
-- GPT-4o typically takes 10-20 seconds
-- This is normal for AI generation
-- Show the loading state and explain the AI is analyzing the facts
-
-### 7. Next Steps After Demo
-
-1. ✅ **Deployment**: Already done!
-2. 🔧 **Google OAuth**: Set up Google Cloud Console for Docs export
-3. 🎨 **Branding**: Add firm logo and colors
-4. 📝 **Templates**: Create firm-specific templates
-5. 👥 **Team Access**: Add team members with API tokens
-6. 📊 **Analytics**: Monitor usage and performance
-
----
-
-## 🎉 You're Ready to Demo!
-
-The app is fully functional and production-ready. Just upload the sample document and watch TWIMC generate a professional demand letter in seconds!
-
-**Your Vercel URL:** Check your Vercel dashboard for the deployment URL
-**Sample File:** `sample_incident_report.docx` in the root directory
-
+- **Letter too generic?** Make sure all 3 documents are uploaded
+- **Missing details?** Check that damages amounts are filled in the form
+- **Placeholders not filled?** Use the interactive form in the modal
+- **Letter too wide?** Should be fixed - displays at 8.5" width with proper formatting

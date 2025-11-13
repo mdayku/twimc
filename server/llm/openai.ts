@@ -189,13 +189,23 @@ Write a complete, professional demand letter in markdown format. The letter shou
    - Cite relevant legal theories (negligence, vicarious liability, etc.)
    - Connect the facts to the legal duty breached
 
-8. **Injuries and Damages (2-4 paragraphs):**
-   - Describe ${plaintiff}'s injuries in detail
-   - Explain medical treatment received
-   - Discuss impact on daily life, work, activities
-   - Break down economic damages (medical bills, lost wages, etc.)
-   - Discuss non-economic damages (pain, suffering, emotional distress)
-   - State the total amount: $${amountClaimed}
+8. **Injuries and Damages (3-5 paragraphs):**
+   - Describe ${plaintiff}'s injuries in detail based on medical records
+   - Explain medical treatment received (ER visit, follow-up care, ongoing treatment)
+   - Discuss impact on daily life, work, activities (time off work, limitations)
+   
+   **Economic Damages (Special Damages):**
+   ${facts.damages?.specials ? `- Past medical expenses: $${facts.damages.specials}` : '- Past medical expenses: [FILL: Total medical bills to date]'}
+   - Future medical expenses: [Estimate based on treatment plan - PT, follow-up visits, medications]
+   - Lost wages: [Calculate based on time off work and salary]
+   - Future lost earning capacity (if applicable)
+   
+   **Non-Economic Damages (General Damages):**
+   ${facts.damages?.generals ? `- Pain and suffering: $${facts.damages.generals}` : '- Pain and suffering: [Describe physical pain, emotional distress, loss of enjoyment of life]'}
+   - Emotional distress
+   - Loss of consortium (if applicable)
+   
+   **Total Damages: $${amountClaimed}**
 
 9. **Demand (1-2 paragraphs):**
    - Formal demand for $${amountClaimed}
@@ -206,6 +216,7 @@ Write a complete, professional demand letter in markdown format. The letter shou
 10. **Closing:**
    - Professional closing ("Sincerely,")
    - ${attorney}, Esq.
+   - ${firm}
    - Attorney for ${plaintiff}
 
 ## Style Guidelines:
