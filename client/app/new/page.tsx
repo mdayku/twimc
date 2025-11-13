@@ -83,8 +83,8 @@ export default function NewLetterPage() {
     // Pattern 2: Remove any standalone [FILL: ...] that might remain
     processed = processed.replace(/\[FILL:[^\]]+\]/g, '')
     
-    // Clean up any double spaces or line breaks that might result
-    processed = processed.replace(/\s{2,}/g, ' ')
+    // Clean up any double spaces (but preserve line breaks)
+    processed = processed.replace(/ {2,}/g, ' ')
     processed = processed.replace(/\n{3,}/g, '\n\n')
     
     return processed.trim()
