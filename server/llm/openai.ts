@@ -128,28 +128,101 @@ Guardrails:
    */
   private buildUserPrompt(facts: any, templateMd?: string, firmStyle?: any): string {
     const styleNote = firmStyle?.tone || 'professional and firm'
+    const plaintiff = facts.parties?.plaintiff || '[TODO: Plaintiff name]'
+    const defendant = facts.parties?.defendant || '[TODO: Defendant name]'
+    const attorney = facts.parties?.plaintiff_attorney || '[TODO: Attorney name]'
+    const firm = facts.parties?.plaintiff_firm || '[TODO: Law firm]'
+    const incident = facts.incident || '[TODO: Incident description]'
+    const venue = facts.venue || '[TODO: Venue/Jurisdiction]'
+    const amountClaimed = facts.damages?.amount_claimed || '[TODO: Total amount]'
+    const incidentDate = facts.incident_date || '[TODO: Date of incident]'
+    const deadlineDays = facts.demand_deadline_days || 30
 
-    return `Generate a demand letter with the following structure:
+    return `You are drafting a formal pre-litigation demand letter on behalf of ${plaintiff} (the injured party) against ${defendant} (the at-fault party/company).
 
-## Facts Provided:
-${JSON.stringify(facts, null, 2)}
+## Case Facts:
+- **Plaintiff (Injured Party):** ${plaintiff}
+- **Defendant (At-Fault Party):** ${defendant}
+- **Attorney:** ${attorney}
+- **Law Firm:** ${firm}
+- **Incident Date:** ${incidentDate}
+- **Venue/Jurisdiction:** ${venue}
+- **Incident Description:** ${incident}
+- **Total Damages Claimed:** $${amountClaimed}
+${facts.damages?.specials ? `- **Special Damages:** $${facts.damages.specials}` : ''}
+${facts.damages?.generals ? `- **General Damages:** $${facts.damages.generals}` : ''}
+${facts.damages?.breakdown ? `\n**Damages Breakdown:**\n${facts.damages.breakdown.map((item: any) => `  - ${item.item}: $${item.amount}`).join('\n')}` : ''}
 
-## Required Sections:
-1. Recipient block and date
-2. Introduction
-3. Statement of Facts (ONLY use facts from the JSON above)
-4. Liability
-5. Damages (specials and generals)
-6. Demand with deadline
-7. Exhibits list (reference any attachments mentioned in facts)
+## Your Task:
+Write a complete, professional demand letter in markdown format. The letter should be 2-3 pages long and include:
 
-## Style:
-Tone: ${styleNote}
-${templateMd ? `\nTemplate guidance:\n${templateMd.slice(0, 500)}` : ''}
+1. **Letterhead/Header Block:**
+   - ${firm}
+   - ${attorney}, Esq.
+   - [TODO: Address, phone, email if not provided]
 
-Return the letter as **markdown** with stable section headings (## Section Name).
+2. **Recipient Block:**
+   - ${defendant}
+   - [TODO: Address - use best guess based on defendant type]
+   - Date: [Use today's date]
 
-CRITICAL: If any required information is missing from the facts, use [TODO: description of what is needed] placeholders.`
+3. **Re: Line:**
+   - "Re: Demand for Settlement - ${plaintiff} v. ${defendant}"
+
+4. **Introduction (1-2 paragraphs):**
+   - State that you represent ${plaintiff}
+   - Briefly describe the incident (date, location, nature)
+   - State the purpose: formal demand for settlement
+
+5. **Statement of Facts (3-5 paragraphs):**
+   - Detailed narrative of what happened based on the incident description
+   - Include specific details about how the incident occurred
+   - Describe the defendant's role/negligence
+   - Explain the immediate aftermath
+
+6. **Liability Analysis (2-3 paragraphs):**
+   - Explain why ${defendant} is legally responsible
+   - Cite relevant legal theories (negligence, vicarious liability, etc.)
+   - Connect the facts to the legal duty breached
+
+7. **Injuries and Damages (2-4 paragraphs):**
+   - Describe ${plaintiff}'s injuries in detail
+   - Explain medical treatment received
+   - Discuss impact on daily life, work, activities
+   - Break down economic damages (medical bills, lost wages, etc.)
+   - Discuss non-economic damages (pain, suffering, emotional distress)
+   - State the total amount: $${amountClaimed}
+
+8. **Demand (1-2 paragraphs):**
+   - Formal demand for $${amountClaimed}
+   - State deadline: ${deadlineDays} days from receipt
+   - Mention that failure to respond may result in litigation
+   - Include attorney's contact information for response
+
+9. **Closing:**
+   - Professional closing ("Sincerely,")
+   - ${attorney}, Esq.
+   - Attorney for ${plaintiff}
+
+## Style Guidelines:
+- Tone: ${styleNote}, assertive but not aggressive
+- Use formal legal language but remain clear
+- Be factual and specific - avoid hyperbole
+- Cite specific damages with dollar amounts
+- Make the defendant's liability clear
+- Create urgency with the deadline
+- **Write in complete sentences and full paragraphs - NOT bullet points or placeholders**
+
+## CRITICAL INSTRUCTIONS:
+- Write a COMPLETE letter, not an outline or template
+- Use actual narrative prose, not "[TODO]" placeholders for sections you can infer
+- If specific details are missing (like exact medical bills), use reasonable language like "medical expenses exceeding $X" or "substantial medical treatment"
+- Make the letter persuasive and detailed enough to actually use in practice
+- Return ONLY the markdown letter - no explanations or meta-commentary
+
+${templateMd ? `\n## Template Reference:\n${templateMd.slice(0, 500)}` : ''}
+
+Now write the complete demand letter:`
   }
 
   /**
