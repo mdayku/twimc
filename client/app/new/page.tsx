@@ -118,9 +118,13 @@ export default function NewLetterPage() {
 
       // Auto-generate draft
       setIsGenerating(true)
+      toast.loading('Generating draft... This may take 20-30 seconds.', { id: 'generating' })
+      
       const generateResponse = await generateDraft({
         facts_id: intakeResponse.facts_id,
       })
+      
+      toast.dismiss('generating')
 
       toast.success('Draft generated!')
       
