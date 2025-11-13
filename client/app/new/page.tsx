@@ -35,6 +35,8 @@ export default function NewLetterPage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedDraft, setGeneratedDraft] = useState<any>(null)
   const [showDraftModal, setShowDraftModal] = useState(false)
+  const [fillValues, setFillValues] = useState<Record<string, string>>({})
+  const [showFillForm, setShowFillForm] = useState(false)
 
   const { register, handleSubmit, formState: { errors }, watch } = useForm<FormData>({
     resolver: zodResolver(factsSchema),
@@ -48,6 +50,31 @@ export default function NewLetterPage() {
       plaintiff_firm: '',
     },
   })
+
+  // Extract [FILL: ...] placeholders from draft
+  const extractFillPlaceholders = (markdown: string): string[] => {
+    const regex = /\[FILL:\s*([^\]]+)\]/g
+    const placeholders: string[] = []
+    let match
+    while ((match = regex.exec(markdown)) !== null) {
+      if (!placeholders.includes(match[1].trim())) {
+        placeholders.push(match[1].trim())
+      }
+    }
+    return placeholders
+  }
+
+  // Replace [FILL: ...] with actual values
+  const processDraftMarkdown = (markdown: string): string => {
+    let processed = markdown
+    Object.entries(fillValues).forEach(([placeholder, value]) => {
+      if (value) {
+        const regex = new RegExp(`\\[FILL:\\s*${placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\]`, 'g')
+        processed = processed.replace(regex, value)
+      }
+    })
+    return processed
+  }
 
   // Watch form values to check if auto-filled
   const formValues = watch()
@@ -131,11 +158,25 @@ export default function NewLetterPage() {
 
       toast.success('Draft generated!')
       
-      // Show draft in modal instead of navigating
+      // Check for [FILL: ...] placeholders
+      const placeholders = extractFillPlaceholders(generateResponse.draft_md)
+      
+      // Show draft in modal
       setGeneratedDraft({
         ...generateResponse,
         facts_id: intakeResponse.facts_id
       })
+      
+      if (placeholders.length > 0) {
+        // Initialize fill values
+        const initialFillValues: Record<string, string> = {}
+        placeholders.forEach(p => { initialFillValues[p] = '' })
+        setFillValues(initialFillValues)
+        setShowFillForm(true)
+      } else {
+        setShowFillForm(false)
+      }
+      
       setShowDraftModal(true)
     } catch (error) {
       console.error('Error:', error)
@@ -410,9 +451,42 @@ export default function NewLetterPage() {
 
             {/* Modal Body */}
             <div className="flex-1 overflow-y-auto p-6">
-              <div className="prose max-w-none">
-                <ReactMarkdown>{generatedDraft.draft_md}</ReactMarkdown>
-              </div>
+              {showFillForm ? (
+                <div className="space-y-6">
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+                    <h3 className="text-lg font-semibold text-yellow-900 mb-2">Missing Information</h3>
+                    <p className="text-sm text-yellow-700">
+                      Please provide the following information to complete your demand letter:
+                    </p>
+                  </div>
+                  
+                  {Object.keys(fillValues).map((placeholder) => (
+                    <div key={placeholder}>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        {placeholder}
+                      </label>
+                      <input
+                        type="text"
+                        value={fillValues[placeholder]}
+                        onChange={(e) => setFillValues({ ...fillValues, [placeholder]: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder={`Enter ${placeholder.toLowerCase()}`}
+                      />
+                    </div>
+                  ))}
+                  
+                  <button
+                    onClick={() => setShowFillForm(false)}
+                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  >
+                    Apply & View Letter
+                  </button>
+                </div>
+              ) : (
+                <div className="prose max-w-none">
+                  <ReactMarkdown>{processDraftMarkdown(generatedDraft.draft_md)}</ReactMarkdown>
+                </div>
+              )}
             </div>
 
             {/* Modal Footer */}
@@ -421,7 +495,7 @@ export default function NewLetterPage() {
                 onClick={async () => {
                   try {
                     const blob = await exportToDocx({
-                      draft_md: generatedDraft.draft_md
+                      draft_md: processDraftMarkdown(generatedDraft.draft_md)
                     })
                     // Create download link
                     const url = window.URL.createObjectURL(blob)

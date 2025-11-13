@@ -215,8 +215,14 @@ Write a complete, professional demand letter in markdown format. The letter shou
 
 ## CRITICAL INSTRUCTIONS:
 - Write a COMPLETE letter, not an outline or template
-- Use actual narrative prose, not "[TODO]" placeholders for sections you can infer
-- If specific details are missing (like exact medical bills), use reasonable language like "medical expenses exceeding $X" or "substantial medical treatment"
+- Use actual narrative prose for sections you can write based on provided facts
+- For REQUIRED information that is truly missing (addresses, phone numbers, specific medical bills, exact dates), use this format: [FILL: description of what's needed]
+- Examples of [FILL] usage:
+  - [FILL: Defendant's mailing address]
+  - [FILL: Attorney phone number]
+  - [FILL: Specific medical bills amount]
+  - [FILL: Date of medical treatment]
+- Do NOT use [FILL] for things you can reasonably infer or write generically
 - Make the letter persuasive and detailed enough to actually use in practice
 - Return ONLY the markdown letter - no explanations or meta-commentary
 
