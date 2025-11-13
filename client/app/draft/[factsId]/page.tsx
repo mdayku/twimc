@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
+
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic'
 import ReactMarkdown from 'react-markdown'
 import toast from 'react-hot-toast'
 import { Download, FileText, Loader2, RefreshCw, Share2, ExternalLink } from 'lucide-react'
